@@ -10,7 +10,7 @@
         .card { background: white; max-width: 800px; margin: 20px auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
         .header { border-bottom: 3px solid var(--accent); margin-bottom: 20px; padding-bottom: 10px; }
         input[type="text"] { padding: 15px; width: 80%; border: 2px solid #ddd; border-radius: 12px; font-size: 1.2em; text-align: center; margin-bottom: 15px; }
-        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 85%; font-size: 1.1em; transition: 0.3s; }
+        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 85%; font-size: 1.1em; transition: 0.3s; margin-bottom: 10px; }
         button:hover { background: #1f5f8b; transform: translateY(-2px); }
         .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .result-table th, .result-table td { border: 1px solid #eee; padding: 10px; text-align: center; }
@@ -22,12 +22,12 @@
         .footer { margin-top: 30px; font-size: 0.8em; color: #888; border-top: 1px solid #eee; padding-top: 15px; }
         .class-badge { display: inline-block; background: #3498db; color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; margin: 5px 0; }
         h3 { color: var(--primary); margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
-        .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; display: none; }
-        .admin-panel button { background: #e74c3c; margin-bottom: 10px; }
-        .admin-panel button:hover { background: #c0392b; }
+        .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; display: none; background: #fdf2f2; border-radius: 15px; padding: 20px; }
+        .btn-upload { background: #27ae60 !important; }
+        .btn-download { background: #e67e22 !important; }
         .admin-toggle { text-align: center; margin-top: 20px; font-size: 0.7em; color: #bbb; cursor: pointer; user-select: none; }
         #updateStatus { margin-top: 10px; font-size: 0.9em; padding: 10px; border-radius: 8px; }
-        .info-box { background: #fff3cd; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: right; font-size: 0.85em; line-height: 1.6; }
+        .info-box { background: #fff3cd; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: right; font-size: 0.85em; line-height: 1.6; color: #856404; }
     </style>
 </head>
 <body>
@@ -46,19 +46,24 @@
     <div class="admin-toggle" onclick="toggleAdmin()" title="انقر 5 مرات للوصول">.</div>
 
     <div class="admin-panel" id="adminPanel">
-        <h3 style="color: #e74c3c;">⚙️ لوحة التحكم - تحديث النقط</h3>
+        <h3 style="color: #e74c3c;">⚙️ لوحة التحكم - تحديث البيانات</h3>
         <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
-        <button onclick="document.getElementById('excelFile').click()">
-            📤 رفع ملف Excel لتحديث النقط
+        
+        <button class="btn-upload" onclick="document.getElementById('excelFile').click()">
+            📤 1. رفع ملف Excel وتحديث النقط
         </button>
+
+        <button id="downloadBtn" class="btn-download" onclick="generateNewHTML()" style="display:none;">
+            💾 2. تحميل كود الصفحة المحدث (HTML)
+        </button>
+
         <div id="updateStatus"></div>
         
         <div class="info-box">
-            <strong>📋 تنسيق الملف المطلوب:</strong><br>
-            • العمود الأول: رقم مسار (G...)<br>
-            • العمود الثاني: الاسم الكامل<br>
-            • العمود الثالث: القسم<br>
-            • الأعمدة 4-21: النقط بالترتيب (PO2, V1, V2, CO1, CO2, LF2, LC1, LC2, LC3, LC4, PE1, PE2, OL1, OL2, HIST, GEO, CIV, ISLAM)
+            <strong>📋 تعليمات هامة للأستاذ بلكاني:</strong><br>
+            1. ارفع ملف Excel أولاً.<br>
+            2. سيظهر لك زر البرتقالي "تحميل كود الصفحة".<br>
+            3. الملف الذي سيتم تحميله هو النسخة الجديدة التي تحتوي على البيانات، استعملها بدلاً من هذا الملف.
         </div>
     </div>
 
@@ -68,7 +73,14 @@
     </div>
 </div>
 
-<script>
+<script id="mainScript">
+    // مصفوفة البيانات الأساسية
+    let DB = {
+        "G176042802": { n: "نعناع خديجة", c: "6APG-1", g: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], a: "0.00" },
+        "G183107408": { n: "الدرقاوي عز العرب", c: "6APG-1", g: [2,0,0,0,2,4,2.5,6,0,0,4.5,1,3,0.25,0,2,2,7.5], a: "1.80" }
+        // ... (باقي البيانات ستحل هنا عند الرفع)
+    };
+
     const labels = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2", "HIST", "GEO", "CIV", "ISLAM"];
     const desc = {
         "PO2": "التواصل الشفهي", "V1": "المعجم 1", "V2": "المعجم 2", "CO1": "فهم المسموع 1", "CO2": "فهم المسموع 2",
@@ -77,237 +89,84 @@
         "HIST": "التاريخ", "GEO": "الجغرافية", "CIV": "التربية المدنية", "ISLAM": "التربية الإسلامية"
     };
 
-    let DB = {
-        "G176042802": { n: "نعناع خديجة", c: "6APG-1", g: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], a: "0.00" },
-        "G183107408": { n: "الدرقاوي عز العرب", c: "6APG-1", g: [2,0,0,0,2,4,2.5,6,0,0,4.5,1,3,0.25,0,2,2,7.5], a: "1.80" },
-        "G185079604": { n: "بوحفرة ادم", c: "6APG-1", g: [2,2.5,7.5,0,4,4,1.5,3,6,4,3.5,3,1,0,0,2.5,6,3], a: "3.00" },
-        "G186074182": { n: "ضياف خديجة", c: "6APG-1", g: [6,5,7.5,2,0,5,5.5,7,8,0,5.5,0,5.75,0,4,4,6.5,3], a: "4.09" },
-        "G189076256": { n: "بنخيران حسام", c: "6APG-1", g: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], a: "0.00" },
-        "G189134944": { n: "الشباكي المهدي", c: "6APG-1", g: [4,5,2.5,7,0,9,7,0,6,0,8,6,0,0,6.5,7.5,4,9], a: "3.89" },
-        "G191079732": { n: "فتيحي يحيى", c: "6APG-1", g: [2,2.5,7.5,1,0,3,7,0,2,4,5.5,5,3.25,2,3,5.5,5.5,6.5], a: "3.20" },
-        "G193074786": { n: "لبيض محمد", c: "6APG-1", g: [2,5,5,2,1,4,5.5,0,2,4,7.5,4,0.25,0,2.5,2.5,6.5,3], a: "3.02" },
-        "G194020655": { n: "مطار آية", c: "6APG-1", g: [3,2.5,7.5,8,2,7,3,4,2,0,7,5,0.5,0,9,10,10,8], a: "3.68" },
-        "G197097558": { n: "بنعبو ريان", c: "6APG-1", g: [2,7.5,7.5,0,0,3,4,7,8,0,0,0,0,0,4.5,6,2,2], a: "2.79" },
-        "G200042049": { n: "خرباق مروة", c: "6APG-1", g: [3,5,10,8,0,7,2.5,3,10,4,8,6.5,5,0,5.5,4,6.5,2], a: "5.14" },
-        "G200046452": { n: "زهران مليكة", c: "6APG-1", g: [6,5,10,8,4,5,5.5,10,10,10,7.5,6,5.75,2,6,7.5,6.5,8], a: "6.77" },
-        "G200064286": { n: "بن المقدم آية", c: "6APG-1", g: [5,5,10,10,5,6,7,10,10,10,9,7.5,8.25,10,6,8,10,9.5], a: "8.05" },
-        "G201073556": { n: "الساعدي محمد", c: "6APG-1", g: [3,0,7.5,4,0,5,2.5,0,4,4,7,5,3,0,6,6.5,3,6], a: "3.21" },
-        "G202028855": { n: "حيمصي الياس", c: "6APG-1", g: [4,7.5,7.5,8,0,9,7,0,0,10,8,7,0,0,9,8,9.5,8.5], a: "4.86" },
-        "G202028856": { n: "الدليلي هاجر", c: "6APG-1", g: [5,7.5,10,9,8,9,8.5,10,10,4,8,7.5,5,4,8,9,8,9.5], a: "7.54" },
-        "G202028865": { n: "فتوحي حمزة", c: "6APG-1", g: [2,7.5,7.5,10,7,9,4,7,6,4,6.5,6,0,0,5,7,6.5,8], a: "5.46" },
-        "G202028870": { n: "القدوري مريم", c: "6APG-1", g: [7,5,10,9,8,10,10,10,10,4,9,7,7,6,10,10,10,9.5], a: "8.00" },
-        "G202028871": { n: "القدوري آسية", c: "6APG-1", g: [6,10,10,10,5,8,5.5,7,10,4,8,9,6.5,2,10,10,10,10], a: "7.21" },
-        "G202028873": { n: "رزوك جنات", c: "6APG-1", g: [6,10,10,8.5,5,8,10,10,10,4,5,2,7.5,4,5,5,8,4.5], a: "7.14" },
-        "G202028875": { n: "حازم محمد امين", c: "6APG-1", g: [6,7.5,10,8,10,10,10,7,10,4,9,9,5.25,10,9,9.5,7.5,10], a: "8.27" },
-        "G202028877": { n: "حجاج عبد الله", c: "6APG-1", g: [6,5,2.5,10,0,5,2.5,7,4,4,8.5,4,1.5,2,5,5.5,7,4], a: "4.43" },
-        "G202028878": { n: "ضياف رانيا", c: "6APG-1", g: [6,10,10,10,9,10,2.5,10,10,4,9,9.5,7.5,6,9,9,8.5,9.5], a: "8.11" },
-        "G203028890": { n: "عنبري جنات", c: "6APG-1", g: [4,2.5,7.5,3,6,3,5.5,0,10,4,6,5.5,1,0,5,8,6.5,3], a: "4.14" },
-        "G203028894": { n: "الحرفاوي زينب", c: "6APG-1", g: [5,2.5,5,8,7,8,5.5,7,10,4,8,7,4,2,7,9,8.5,8.5], a: "5.93" },
-        "G203028897": { n: "الجبلي محمد", c: "6APG-1", g: [4,2.5,7.5,10,8,6,8.5,7,10,10,6,6,1.5,2,8,8.5,6,5], a: "6.36" },
-        "G204042031": { n: "فرينة انوار", c: "6APG-1", g: [6,10,10,10,9,10,10,10,10,4,10,7.5,8.25,4,8,9,7.5,10], a: "8.48" },
-        "G204084290": { n: "امناوي صفاء", c: "6APG-1", g: [6,5,7.5,10,6,8,4.5,4.5,10,10,9,7.5,8.75,10,8,8,10,9.5], a: "7.62" },
-        "G205068483": { n: "الواحدي محمد أمين", c: "6APG-1", g: [3,7.5,10,5,1,10,4,7,8,10,7,5,7.5,6,3.5,7,2.5,7], a: "6.50" },
-        "G209006104": { n: "عفيف اشراق", c: "6APG-1", g: [5,5,7.5,8,4,4,5.5,7,8,4,9,6.5,4,0,8,7,8,7.5], a: "5.54" },
-        "G209031884": { n: "جلال ريان", c: "6APG-1", g: [2,7.5,10,3,3,4,7,10,6,4,6.5,3,0.5,0,6,9.5,7,5.5], a: "4.75" },
-        "G209042045": { n: "المجذوبي الياس", c: "6APG-1", g: [2,7.5,10,2,2,4,10,3,10,4,6,4,0,0,4,5,6.5,4.5], a: "4.61" },
-        "G209054745": { n: "نوار ملاك", c: "6APG-1", g: [8,5,10,6,4.5,6,10,10,10,4,8.5,6,6.25,2,5,6,8,6.5], a: "6.88" },
-        "R198042190": { n: "العيني أنس", c: "6APG-1", g: [2,5,7.5,6,1,5,5.5,7,8,4,6,4.5,2,4,5.5,6,8,6.5], a: "4.82" },
-        "F193220916": { n: "نعيم لقمان", c: "6APG-1", g: [7,5,5,8,2,8,5.5,7,6,4,7,5,4.75,2,4.5,6,8,7], a: "5.45" },
-        "G162048433": { n: "لمخوض أمين", c: "6APG-2", g: [3,2.5,5,2,0,3,2.5,3,6,0,4,1.5,0,0,7.5,6,3,1], a: "2.32" },
-        "G171092093": { n: "مدزيري محمد", c: "6APG-2", g: [2,7.5,7.5,3,2,3,2.5,0,10,4,5.5,5,4,0,8,8.5,4,4], a: "4.00" },
-        "G183050458": { n: "الزاهري احمد", c: "6APG-2", g: [3,5,10,4,0,3,4,3,8,4,4,3,1,4,5,4,5,2], a: "4.00" },
-        "G186094973": { n: "القصيبي محمد امين", c: "6APG-2", g: [3,2.5,10,4,1,5,2.5,3,10,4,6,4,4.5,0,6,5.5,7,4], a: "4.25" },
-        "G188061295": { n: "الحسوني يونس", c: "6APG-2", g: [2,7.5,5,6,4,4,4,4,8,10,8.5,5.5,5.25,2,9,10,7.5,4], a: "5.41" },
-        "G191068973": { n: "البوعناني ايمن", c: "6APG-2", g: [5,5,7.5,5,0,4,10,7,8,10,7,4,1,6,7,9,7,4], a: "5.68" },
-        "G191123629": { n: "بلفحيلية رضى", c: "6APG-2", g: [2,0,2.5,2,0,5,2.5,7,4,4,0,5,3.75,0,2,4,8,6], a: "2.70" },
-        "G192020609": { n: "شاقو سلمى", c: "6APG-2", g: [3,2.5,2.5,6,8,4,2.5,7,8,4,4,5,8,0,5,3.5,6,0], a: "4.61" },
-        "G192086633": { n: "المساوي مريم", c: "6APG-2", g: [6,2.5,7.5,5,8,4,7,10,10,4,9.5,7,7,8,6,7.5,7,4], a: "6.82" },
-        "G193020606": { n: "الناجي سعد", c: "6APG-2", g: [4,10,10,8,5,5,7,3,8,4,6,6,4.5,0,9,10,9.5,9], a: "5.75" },
-        "G193112777": { n: "الفائق مراد", c: "6APG-2", g: [7,2.5,0,4,2,4,7,7,6,4,5,5,0,3.25,4,8,7,3], a: "4.05" },
-        "G199020638": { n: "الجاوي فهد", c: "6APG-2", g: [4,5,5,4,3,3,5.5,7,8,4,2,3,0.25,0,5,6,3,2], a: "3.84" },
-        "G201042028": { n: "القباي نسرين", c: "6APG-2", g: [5,2.5,10,6,4,8,7,3,4,10,8.5,4.5,5.5,0,2,7,6,4], a: "5.57" },
-        "G201087057": { n: "الفائق صفاء", c: "6APG-2", g: [5,5,10,7,6,5,10,7,6,10,5.5,6,2,2,10,10,10,9], a: "6.18" },
-        "G201150645": { n: "الإدريسي عماد", c: "6APG-2", g: [5,10,7.5,8,3,9,5.5,10,10,4,8.5,7,6,5,8,4,8,5], a: "7.04" },
-        "G202006106": { n: "المركة ريان", c: "6APG-2", g: [2,7.5,5,5,0,4,3,7,8,10,9.5,6,4.25,0,5,3.5,9,4], a: "5.09" },
-        "G202006858": { n: "الناصح حمزة", c: "6APG-2", g: [2,5,5,5,1,5,5.5,7,6,4,4,4,1.75,0,2,7,6,0], a: "3.95" },
-        "G202028861": { n: "محراش صهيب", c: "6APG-2", g: [7,7.5,5,10,10,10,7,7,10,10,9,10,8.25,8,10,10,10,6.5], a: "8.48" },
-        "G202028868": { n: "الصبح فاطمة الزهراء", c: "6APG-2", g: [3,2.5,10,2,1,7,5.5,0,2,0,7,6.5,1.5,0,7,7,9.5,9], a: "3.43" },
-        "G202028869": { n: "بوشان نور الهدى", c: "6APG-2", g: [7,5,10,10,5,9,2.5,7,8,4,7,7.5,8,5,10,9,9.5,8], a: "6.79" },
-        "G202028872": { n: "القرقوري زياد", c: "6APG-2", g: [4,2.5,7.5,5,5,4,10,10,10,0,6,5,5,5,8,10,7,7], a: "5.64" },
-        "G202028880": { n: "العكاري رحاب", c: "6APG-2", g: [5,7.5,10,9,4,6,7,7,8,4,7,7.5,8,7,9,9,10,8], a: "6.93" },
-        "G202045529": { n: "الناصري معاد", c: "6APG-2", g: [4,2.5,7.5,3,0,4,2.5,4,6,0,4.5,4,2.5,0,5,6,6,1], a: "3.18" },
-        "G202064340": { n: "الفخري خديجة", c: "6APG-2", g: [9,2.5,5,4,6,6,2.5,7,8,4,5.5,5,6.5,0,8,9,9,8], a: "5.07" },
-        "G203028886": { n: "الفطواكي ريحانة", c: "6APG-2", g: [9,7.5,10,7,8,7,8.5,7,10,4,8,9,9.75,8,8,9.5,7,7], a: "8.05" },
-        "G203028888": { n: "عفوالله امينة", c: "6APG-2", g: [8,7.5,10,10,7,10,10,10,10,10,9.5,9,10,6,10,10,10,10], a: "9.07" },
-        "G203028893": { n: "زيان محمد", c: "6APG-2", g: [4,7.5,7.5,8,2,6,10,7,4,4,8,9,4.5,0,8,9,7.5,3], a: "5.82" },
-        "G203028899": { n: "النائر مروة", c: "6APG-2", g: [9,7.5,10,10,8,8,10,7,10,10,8,9.5,9.5,6,8,9.5,9,9.5], a: "8.75" },
-        "G204054755": { n: "اياس مروان", c: "6APG-2", g: [6,7.5,10,8,8,6,10,10,10,4,5.5,6,6.5,2,8,10,7.5,5], a: "7.11" },
-        "G207003378": { n: "لحمادي إلياس", c: "6APG-2", g: [5,2.5,10,3,0,3,10,7,8,4,4.5,5.5,1.75,0,8,2,4,6], a: "4.59" },
-        "G208045490": { n: "قرواش ايمان", c: "6APG-2", g: [9,7.5,10,10,4,9,5.5,10,10,4,6.5,6,5,4,6,9,7.5,7], a: "7.18" },
-        "G208054751": { n: "ابوزايد محمد", c: "6APG-2", g: [6,10,10,4,2,4,7,7,10,4,4,3.5,0.5,0,8,7,4,4], a: "5.14" },
-        "G208064245": { n: "البهي محمد", c: "6APG-2", g: [7,10,10,8,4,4,5.5,10,10,4,7,6.5,7,0,8,9,9.5,9.5], a: "6.64" },
-        "G209064244": { n: "البهي فاطمة الزهراء", c: "6APG-2", g: [5,7.5,0,4,2,4,7,7,10,10,8.75,8,7.5,8,7.5,9.5,10,9.5], a: "6.34" },
-        "L209001972": { n: "بنرمضان محمد أمين", c: "6APG-2", g: [4,2.5,7.5,8,4,4,7,10,4,4,4,4,3,2,8,9,9,6], a: "4.86" }
-    };
-
     function displayResult() {
         const id = document.getElementById('massarID').value.trim().toUpperCase();
         const s = DB[id];
         const out = document.getElementById('output');
-        
         if (!s) {
-            out.innerHTML = "<p style='color:red; margin-top:20px;'>عذراً، الرمز غير موجود. تأكد من إدخال رقم مسار الصحيح.</p>";
+            out.innerHTML = "<p style='color:red; margin-top:20px;'>عذراً، الرمز غير موجود.</p>";
             return;
         }
+        let h = `<div class="student-name">${s.n}</div><div class="class-badge">القسم: ${s.c}</div>`;
         
-        let h = '<div class="student-name">' + s.n + '</div>';
-        h += '<div class="class-badge">القسم: ' + s.c + '</div>';
-        
-        h += '<h3>📚 وحدة اللغة العربية</h3>';
-        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        const arabicLabels = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2"];
-        for (let i = 0; i < arabicLabels.length; i++) {
-            const l = arabicLabels[i];
-            const idx = labels.indexOf(l);
-            h += '<tr><td>' + l + '</td><td>' + desc[l] + '</td><td>' + s.g[idx] + '</td></tr>';
-        }
-        h += '<tr class="avg-row"><td colspan="2">معدل مادة اللغة العربية</td><td>' + s.a + '</td></tr></table>';
-        
+        // عرض جدول اللغة العربية
+        h += '<h3>📚 وحدة اللغة العربية</h3><table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
+        const arabicLabels = labels.slice(0, 14);
+        arabicLabels.forEach((l, idx) => {
+            h += `<tr><td>${l}</td><td>${desc[l]}</td><td>${s.g[idx]}</td></tr>`;
+        });
+        h += `<tr class="avg-row"><td colspan="2">معدل اللغة العربية</td><td>${s.a}</td></tr></table>`;
+
+        // الاجتماعيات والتربية الإسلامية
         const socAvg = ((s.g[14] + s.g[15] + s.g[16]) / 3).toFixed(2);
-        h += '<h3>🌍 وحدة الاجتماعيات</h3>';
-        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        h += '<tr><td>HIST</td><td>' + desc["HIST"] + '</td><td>' + s.g[14] + '</td></tr>';
-        h += '<tr><td>GEO</td><td>' + desc["GEO"] + '</td><td>' + s.g[15] + '</td></tr>';
-        h += '<tr><td>CIV</td><td>' + desc["CIV"] + '</td><td>' + s.g[16] + '</td></tr>';
-        h += '<tr class="avg-row"><td colspan="2">معدل الاجتماعيات</td><td>' + socAvg + '</td></tr></table>';
-        
-        h += '<h3>🕌 وحدة التربية الإسلامية</h3>';
-        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        h += '<tr><td>ISLAM</td><td>' + desc["ISLAM"] + '</td><td>' + s.g[17] + '</td></tr>';
-        h += '<tr class="avg-row"><td colspan="2">معدل التربية الإسلامية</td><td>' + s.g[17].toFixed(2) + '</td></tr></table>';
-
-        h += '<div class="info-panel">';
-        h += '<strong>💡 ملاحظة توجيهية:</strong><br>';
-        if (parseFloat(s.a) >= 8) {
-            h += 'أداء متميز جداً! استمر في هذا المسار وتوسع في القراءة الحرة لتنمية رصيدك المعرفي.';
-        } else if (parseFloat(s.a) >= 5) {
-            h += 'نتيجتك متوسطة ومطمئنة، لكن هناك مجال كبير للتحسن، خاصة في مكونات الإنتاج الكتابي والظواهر اللغوية.';
-        } else {
-            h += 'هذه النتيجة تشير إلى وجود صعوبات في بعض التعلمات الأساسية. ننصح بالتركيز أكثر على قواعد اللغة والتدرب على القراءة اليومية.';
-        }
-        h += '</div>';
-
-        h += '<div class="tips-panel">';
-        h += '<strong>📌 نصائح الأستاذ بلكاني للمرحلة المقبلة:</strong><br>';
-        h += '• المراجعة الدائمة للظواهر اللغوية (صرف، تحويل، إملاء).<br>';
-        h += '• قراءة قصص قصيرة باللغة العربية لتقوية "فهم المقروء".<br>';
-        h += '• الاهتمام بجودة الخط وتنظيم ورقة التحرير.';
-        h += '</div>';
+        h += `<h3>🌍 وحدة الاجتماعيات</h3><table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>`;
+        ["HIST", "GEO", "CIV"].forEach((l, i) => h += `<tr><td>${l}</td><td>${desc[l]}</td><td>${s.g[14+i]}</td></tr>`);
+        h += `<tr class="avg-row"><td colspan="2">معدل الاجتماعيات</td><td>${socAvg}</td></tr></table>`;
 
         out.innerHTML = h;
     }
 
+    // وظائف لوحة التحكم
     let clickCount = 0;
-    let clickTimer = null;
-
     function toggleAdmin() {
         clickCount++;
-        
-        if (clickTimer) clearTimeout(clickTimer);
-        
-        clickTimer = setTimeout(() => {
-            clickCount = 0;
-        }, 2000);
-        
+        setTimeout(() => clickCount = 0, 2000);
         if (clickCount >= 5) {
-            const panel = document.getElementById('adminPanel');
-            if (panel.style.display === 'none' || panel.style.display === '') {
-                panel.style.display = 'block';
-            } else {
-                panel.style.display = 'none';
-            }
-            clickCount = 0;
+            document.getElementById('adminPanel').style.display = 'block';
         }
     }
 
     async function handleFileUpload(event) {
         const file = event.target.files[0];
         const status = document.getElementById('updateStatus');
-        
-        if (!file) {
-            status.style.background = '#ffebee';
-            status.innerHTML = '<span style="color: red;">❌ لم يتم اختيار أي ملف</span>';
-            return;
-        }
-
-        status.style.background = '#e3f2fd';
-        status.innerHTML = '<span style="color: blue;">⏳ جاري معالجة الملف...</span>';
+        if (!file) return;
 
         try {
             const data = await file.arrayBuffer();
             const workbook = XLSX.read(data, { type: 'array' });
-            
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            
-            if (jsonData.length < 2) {
-                status.style.background = '#ffebee';
-                status.innerHTML = '<span style="color: red;">❌ الملف فارغ أو لا يحتوي على بيانات كافية</span>';
-                return;
-            }
-
-            let updatedCount = 0;
-            let newCount = 0;
+            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             
             for (let i = 1; i < jsonData.length; i++) {
                 const row = jsonData[i];
-                
                 if (!row[0]) continue;
-                
-                const massarID = String(row[0]).trim().toUpperCase();
-                const name = row[1] || '';
-                const classRoom = row[2] || '';
-                
+                const mID = String(row[0]).trim().toUpperCase();
                 const grades = [];
-                for (let j = 3; j < 21 && j < row.length; j++) {
-                    const grade = parseFloat(row[j]) || 0;
-                    grades.push(grade);
-                }
+                for (let j = 3; j < 21; j++) grades.push(parseFloat(row[j]) || 0);
                 
-                const arabicGrades = grades.slice(0, 14).filter(g => g > 0);
-                const average = arabicGrades.length > 0 
-                    ? (arabicGrades.reduce((a, b) => a + b, 0) / arabicGrades.length).toFixed(2)
-                    : "0.00";
+                const arb = grades.slice(0, 14);
+                const avg = (arb.reduce((a, b) => a + b, 0) / 14).toFixed(2);
                 
-                if (DB[massarID]) {
-                    updatedCount++;
-                } else {
-                    newCount++;
-                }
-                
-                DB[massarID] = {
-                    n: name,
-                    c: classRoom,
-                    g: grades,
-                    a: average
-                };
+                DB[mID] = { n: row[1], c: row[2], g: grades, a: avg };
             }
-            
-            status.style.background = '#e8f5e9';
-            status.innerHTML = `<span style="color: green;"><strong>✅ تم التحديث بنجاح!</strong><br>
-                📝 تم تحديث ${updatedCount} تلميذ(ة)<br>
-                ➕ تمت إضافة ${newCount} تلميذ(ة) جديد(ة)<br>
-                📊 إجمالي التلاميذ: ${Object.keys(DB).length}</span>`;
-            
-            event.target.value = '';
-            
-        } catch (error) {
-            console.error(error);
-            status.style.background = '#ffebee';
-            status.innerHTML = '<span style="color: red;">❌ حدث خطأ في معالجة الملف. تأكد من أن الملف بصيغة Excel صحيحة.</span>';
+            status.innerHTML = `<span style="color: green;">✅ تم تحديث ${Object.keys(DB).length} تلميذ. يمكنك الآن تحميل الملف الجديد.</span>`;
+            document.getElementById('downloadBtn').style.display = 'block';
+        } catch (e) {
+            status.innerHTML = `<span style="color: red;">❌ خطأ في معالجة الملف.</span>`;
         }
+    }
+
+    // --- الوظيفة الجديدة لتوليد ملف HTML كامل بالبيانات ---
+    function generateNewHTML() {
+        const currentHTML = document.documentElement.outerHTML;
+        // استبدال كائن DB القديم بالجديد
+        const dbString = `let DB = ${JSON.stringify(DB, null, 4)};`;
+        const updatedHTML = currentHTML.replace(/let DB = \{[\s\S]*?\};/, dbString);
+
+        const blob = new Blob([updatedHTML], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'results_updated.html';
+        a.click();
     }
 </script>
 
