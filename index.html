@@ -5,103 +5,93 @@
     <title>نتائج مدرسة طه حسين - الأستاذ بلكاني</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
-        .container { background: white; max-width: 700px; margin: auto; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        input, button { padding: 12px; margin: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
-        button { background: #2980b9; color: white; cursor: pointer; width: 200px; }
-        .result-box { margin-top: 20px; text-align: right; border-top: 2px solid #2980b9; padding-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background: #2c3e50; color: white; }
-        .student-header { background: #fff3cd; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 1.2em; color: #d35400; }
+        :root { --primary: #2c3e50; --accent: #2980b9; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; text-align: center; }
+        .card { background: white; max-width: 800px; margin: auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        input[type="text"] { padding: 15px; width: 70%; border: 2px solid #ddd; border-radius: 10px; font-size: 1.1em; margin-bottom: 10px; }
+        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .result-table th, .result-table td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        .result-table th { background: var(--primary); color: white; }
+        .student-info { background: #fff3cd; padding: 15px; border-radius: 10px; margin: 20px 0; font-weight: bold; font-size: 1.3em; color: #d35400; }
+        .admin-section { margin-top: 40px; padding: 20px; border: 2px dashed #bbb; border-radius: 15px; background: #fafafa; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>نتائج التلاميذ - مدرسة طه حسين</h2>
-    <p>الأستاذ: عبد اللطيف بلكاني</p>
+<div class="card">
+    <h2>📊 منظومة عرض النتائج التفصيلية</h2>
+    <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
 
-    <div style="background: #e8f4f8; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-        <label>خطوة 1: ارفع ملف الإكسيل أولاً</label><br>
-        <input type="file" id="fileInput" accept=".xlsx, .xls">
+    <div class="admin-section">
+        <label>1. ارفع ملف (note final.xlsx) هنا:</label><br><br>
+        <input type="file" id="excelFile" accept=".xlsx, .xls">
+        <div id="status" style="margin-top:10px; font-weight:bold;"></div>
     </div>
 
-    <div id="searchSection">
-        <label>خطوة 2: أدخل رقم مسار</label><br>
-        <input type="text" id="studentId" placeholder="مثلاً: G123456789">
-        <button onclick="searchStudent()">عرض النتيجة</button>
+    <hr style="margin: 30px 0; opacity: 0.2;">
+
+    <div>
+        <label>2. ابحث عن النتيجة:</label><br><br>
+        <input type="text" id="massarInput" placeholder="أدخل رقم مسار">
+        <button onclick="showResult()">عرض النقط</button>
     </div>
 
-    <div id="displayArea" class="result-box"></div>
+    <div id="resultArea"></div>
 </div>
 
 <script>
-    // مصفوفة أسماء المكونات
-    const subjects = ["التواصل الشفهي", "المعجم 1", "المعجم 2", "فهم المسموع 1", "فهم المسموع 2", "طلاقة القراءة", "فهم المقروء 1", "فهم المقروء 2", "فهم المقروء 3", "فهم المقروء 4", "الإنتاج الكتابي 1", "الإنتاج الكتابي 2", "الظواهر اللغوية 1", "الظواهر اللغوية 2", "التاريخ", "الجغرافيا", "المدنية", "الإسلامية"];
+    let studentsDB = {};
+    const subNames = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2", "HIST", "GEO", "CIV", "ISLAM"];
+    const subArabic = ["التواصل الشفهي", "المعجم 1", "المعجم 2", "فهم المسموع 1", "فهم المسموع 2", "طلاقة القراءة", "فهم المقروء 1", "فهم المقروء 2", "فهم المقروء 3", "فهم المقروء 4", "الإنتاج الكتابي 1", "الإنتاج الكتابي 2", "الظواهر اللغوية 1", "الظواهر اللغوية 2", "التاريخ", "الجغرافيا", "التربية المدنية", "التربية الإسلامية"];
 
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
+    document.getElementById('excelFile').addEventListener('change', function(e) {
         const reader = new FileReader();
-
         reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
 
-                let db = {};
-                for (let i = 1; i < rows.length; i++) {
-                    let row = rows[i];
-                    if (row[0]) {
-                        let id = String(row[0]).trim().toUpperCase();
-                        db[id] = {
-                            name: row[1],
-                            class: row[2],
-                            marks: row.slice(3, 21) // يأخذ من العمود 4 إلى 21
-                        };
-                    }
+            studentsDB = {};
+            // نبدأ من السطر الثاني لتخطي العناوين
+            for(let i=1; i<json.length; i++) {
+                let row = json[i];
+                if(row[0]) {
+                    let id = String(row[0]).trim().toUpperCase();
+                    studentsDB[id] = {
+                        name: row[1],
+                        class: row[2] || "غير محدد",
+                        grades: row.slice(3, 21) // النقط من العمود 4 إلى 21
+                    };
                 }
-                
-                localStorage.setItem('schoolData', JSON.stringify(db));
-                alert("تم بنجاح! تم التعرف على " + Object.keys(db).length + " تلميذ.");
-            } catch (err) {
-                alert("خطأ في قراءة الملف: " + err.message);
             }
+            document.getElementById('status').innerHTML = "✅ تم ربط " + Object.keys(studentsDB).length + " تلميذ بنجاح!";
+            document.getElementById('status').style.color = "green";
         };
-        reader.readAsArrayBuffer(file);
+        reader.readAsArrayBuffer(e.target.files[0]);
     });
 
-    function searchStudent() {
-        const id = document.getElementById('studentId').value.trim().toUpperCase();
-        const display = document.getElementById('displayArea');
-        const rawData = localStorage.getItem('schoolData');
+    function showResult() {
+        const id = document.getElementById('massarInput').value.trim().toUpperCase();
+        const area = document.getElementById('resultArea');
+        const s = studentsDB[id];
 
-        if (!rawData) {
-            alert("يرجى رفع ملف الإكسيل أولاً!");
+        if(!s) {
+            area.innerHTML = "<p style='color:red; margin-top:20px;'>❌ هذا الرقم غير موجود. تأكد من رفع الملف الصحيح.</p>";
             return;
         }
 
-        const db = JSON.parse(rawData);
-        const s = db[id];
-
-        if (!s) {
-            display.innerHTML = "<p style='color:red'>❌ لم يتم العثور على الرقم " + id + " في الملف.</p>";
-            return;
-        }
-
-        let tableHtml = `<div class="student-header">التلميذ(ة): ${s.name} | القسم: ${s.class}</div>`;
-        tableHtml += `<table><tr><th>المادة/المكون</th><th>النقطة</th></tr>`;
+        let html = `<div class="student-info">التلميذ: ${s.name} <br> القسم: ${s.class}</div>`;
+        html += `<table class="result-table"><tr><th>المكون</th><th>النقطة</th></tr>`;
         
-        subjects.forEach((subj, index) => {
-            tableHtml += `<tr><td>${subj}</td><td>${s.marks[index] || 0}</td></tr>`;
+        subArabic.forEach((name, index) => {
+            html += `<tr><td>${name}</td><td>${s.grades[index] || 0}</td></tr>`;
         });
 
-        tableHtml += `</table>`;
-        display.innerHTML = tableHtml;
+        html += `</table>`;
+        area.innerHTML = html;
     }
 </script>
-
 </body>
 </html>
