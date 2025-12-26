@@ -8,19 +8,18 @@
     <style>
         :root { --primary: #2c3e50; --accent: #2980b9; --success: #27ae60; --bg: #f4f7f6; --error: #e74c3c; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .card { background: white; max-width: 800px; margin: 20px auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        .card { background: white; max-width: 800px; margin: 10px auto; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
         .header { border-bottom: 3px solid var(--accent); margin-bottom: 20px; padding-bottom: 10px; }
-        input[type="text"] { padding: 15px; width: 85%; border: 2px solid #ddd; border-radius: 12px; font-size: 1.2em; text-align: center; margin-bottom: 15px; outline: none; }
-        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 90%; font-size: 1.1em; transition: 0.3s; }
-        button:hover { background: #1f5f8b; }
-        .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        .result-table th, .result-table td { border: 1px solid #eee; padding: 10px; text-align: center; }
-        .result-table th { background: var(--primary); color: white; font-size: 0.9em; }
-        .student-name { color: #e67e22; font-size: 1.7em; font-weight: bold; margin: 15px 0; padding: 10px; background: #fff8f0; border-radius: 10px; }
-        .avg-row { background: #fff3cd; font-weight: bold; font-size: 1.1em; }
-        .admin-panel { margin-top: 30px; padding: 20px; border: 2px dashed #ccc; border-radius: 15px; background: #fafafa; }
-        #updateStatus { margin-top: 10px; font-weight: bold; font-size: 0.9em; }
-        .error-msg { color: var(--error); padding: 15px; background: #fdedec; border-radius: 10px; margin-top: 15px; border: 1px solid #f5c6cb; }
+        input[type="text"] { padding: 15px; width: 80%; border: 2px solid #ddd; border-radius: 12px; font-size: 1.2em; text-align: center; margin-bottom: 10px; }
+        button { background: var(--accent); color: white; border: none; padding: 15px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 85%; font-size: 1.1em; transition: 0.3s; margin: 5px 0; }
+        .result-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border: 2px solid var(--primary); }
+        .result-table th, .result-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .result-table th { background: var(--primary); color: white; }
+        .student-name { color: #e67e22; font-size: 1.6em; font-weight: bold; margin: 10px 0; padding: 10px; background: #fff8f0; border-radius: 10px; border: 1px solid #ffe0b2; }
+        .avg-row { background: #fff3cd; font-weight: bold; }
+        .admin-panel { margin-top: 30px; padding: 15px; border: 2px dashed #ccc; border-radius: 15px; background: #fdfdfd; }
+        #updateStatus { margin: 10px 0; font-weight: bold; padding: 8px; border-radius: 5px; }
+        .error-msg { color: var(--error); padding: 15px; background: #fdedec; border-radius: 10px; margin-top: 10px; border: 1px solid #f5c6cb; }
     </style>
 </head>
 <body>
@@ -31,115 +30,135 @@
         <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
     </div>
 
-    <input type="text" id="massarID" placeholder="أدخل رقم مسار (G...)">
-    <button onclick="displayResult()">عرض كشف النقط التفصيلي</button>
+    <input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (مثلاً: G123456789)">
+    <button onclick="displayResult()">🔎 عرض كشف النقط</button>
 
     <div id="output"></div>
 
     <div class="admin-panel">
-        <h3 style="color: var(--error);">⚙️ تحديث قاعدة البيانات</h3>
-        <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
-        <button style="background: var(--success);" onclick="document.getElementById('excelFile').click()">
-            📤 رفع ملف Excel الجديد
-        </button>
+        <h3 style="color: var(--error);">⚙️ لوحة التحكم (رفع الملف)</h3>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
         <div id="updateStatus"></div>
     </div>
 </div>
 
 <script>
-    // استخدام كائن عالمي لتخزين البيانات
-    window.localDB = {};
+    // تخزين البيانات في مكان آمن
+    var MAIN_DATA = {};
 
-    const labels = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2", "HIST", "GEO", "CIV", "ISLAM"];
-    const desc = {
+    const DESC_MAP = {
         "PO2": "التواصل الشفهي", "V1": "المعجم 1", "V2": "المعجم 2", "CO1": "فهم المسموع 1", "CO2": "فهم المسموع 2",
         "LF2": "طلاقة القراءة", "LC1": "فهم المقروء 1", "LC2": "فهم المقروء 2", "LC3": "فهم المقروء 3", "LC4": "فهم المقروء 4",
         "PE1": "الإنتاج الكتابي 1", "PE2": "الإنتاج الكتابي 2", "OL1": "الظواهر اللغوية 1", "OL2": "الظواهر اللغوية 2",
         "HIST": "التاريخ", "GEO": "الجغرافية", "CIV": "التربية المدنية", "ISLAM": "التربية الإسلامية"
     };
 
+    const LABELS = Object.keys(DESC_MAP);
+
     function displayResult() {
-        const inputVal = document.getElementById('massarID').value;
-        // تنظيف المدخلات من الفراغات وتحويلها لحروف كبيرة
-        const id = inputVal.trim().toUpperCase();
-        const out = document.getElementById('output');
+        var input = document.getElementById('massarID').value;
+        var id = input.trim().toUpperCase();
+        var out = document.getElementById('output');
+        
+        console.log("البحث عن:", id); // للتأكد في Console
         
         if (!id) {
-            out.innerHTML = '<div class="error-msg">⚠️ يرجى إدخال رقم مسار أولاً</div>';
+            out.innerHTML = '<div class="error-msg">⚠️ يرجى كتابة رقم مسار أولاً</div>';
             return;
         }
 
-        const s = window.localDB[id];
+        var student = MAIN_DATA[id];
         
-        if (!s) {
-            out.innerHTML = `<div class="error-msg">❌ الرقم <strong>${id}</strong> غير مسجل.<br>تأكد من الرقم أو حاول إعادة رفع الملف.</div>`;
+        if (!student) {
+            out.innerHTML = '<div class="error-msg">❌ الرقم (' + id + ') غير موجود في الملف الذي تم رفعه حالياً.</div>';
             return;
         }
 
-        // بناء العرض
-        let h = `<div class="student-name">${s.n}</div>`;
-        h += `<div style="margin-bottom:15px;">القسم: <strong>${s.c}</strong></div>`;
+        // بناء الجدول برمجياً بشكل صريح
+        var html = '<div class="student-name">' + student.name + '</div>';
+        html += '<div style="margin-bottom:10px;">القسم: <strong>' + student.classRoom + '</strong></div>';
         
-        h += '<h3>📚 اللغة العربية</h3><table class="result-table"><tr><th>المكون</th><th>النقطة</th></tr>';
-        for (let i = 0; i < 14; i++) {
-            h += `<tr><td>${desc[labels[i]]}</td><td>${s.g[i] || 0}</td></tr>`;
+        // جدول العربية
+        html += '<h3>📚 وحدة اللغة العربية</h3>';
+        html += '<table class="result-table"><thead><tr><th>المكون</th><th>النقطة</th></tr></thead><tbody>';
+        for (var i = 0; i < 14; i++) {
+            html += '<tr><td>' + DESC_MAP[LABELS[i]] + '</td><td>' + (student.grades[i] || 0) + '</td></tr>';
         }
-        h += `<tr class="avg-row"><td>المعدل</td><td>${s.a}</td></tr></table>`;
+        html += '<tr class="avg-row"><td>معدل اللغة العربية</td><td>' + student.avg + '</td></tr></tbody></table>';
 
-        // إضافة المواد الأخرى
-        const socAvg = (( (s.g[14]||0) + (s.g[15]||0) + (s.g[16]||0) ) / 3).toFixed(2);
-        h += '<h3>🌍 الاجتماعيات</h3><table class="result-table"><tr><td>التاريخ</td><td>${s.g[14]||0}</td></tr><tr><td>الجغرافيا</td><td>${s.g[15]||0}</td></tr><tr><td>المدنية</td><td>${s.g[16]||0}</td></tr><tr class="avg-row"><td>المعدل</td><td>${socAvg}</td></tr></table>';
+        // جدول الاجتماعيات
+        var s1 = parseFloat(student.grades[14]) || 0;
+        var s2 = parseFloat(student.grades[15]) || 0;
+        var s3 = parseFloat(student.grades[16]) || 0;
+        var socAvg = ((s1 + s2 + s3) / 3).toFixed(2);
         
-        h += '<h3>🕌 التربية الإسلامية</h3><table class="result-table"><tr><td>النقطة</td><td>${s.g[17]||0}</td></tr></table>';
+        html += '<h3>🌍 وحدة الاجتماعيات</h3>';
+        html += '<table class="result-table"><tr><td>التاريخ</td><td>'+s1+'</td></tr><tr><td>الجغرافيا</td><td>'+s2+'</td></tr><tr><td>المدنية</td><td>'+s3+'</td></tr><tr class="avg-row"><td>المعدل</td><td>'+socAvg+'</td></tr></table>';
 
-        out.innerHTML = h;
+        // التربية الإسلامية
+        html += '<h3>🕌 التربية الإسلامية</h3>';
+        html += '<table class="result-table"><tr><td>النقطة</td><td>' + (student.grades[17] || 0) + '</td></tr></table>';
+
+        out.innerHTML = html;
+        console.log("تم عرض النتائج بنجاح!");
     }
 
-    async function handleFileUpload(event) {
-        const file = event.target.files[0];
-        const status = document.getElementById('updateStatus');
+    function handleFileUpload(event) {
+        var file = event.target.files[0];
+        var status = document.getElementById('updateStatus');
         if (!file) return;
 
         status.innerHTML = "⏳ جاري المعالجة...";
-        
-        try {
-            const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        status.style.color = "blue";
 
-            // إعادة تعيين القاعدة عند كل رفع جديد
-            window.localDB = {};
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, {type: 'array'});
+                var sheetName = workbook.SheetNames[0];
+                var sheet = workbook.Sheets[sheetName];
+                var json = XLSX.utils.sheet_to_json(sheet, {header: 1});
 
-            for (let i = 1; i < json.length; i++) {
-                const row = json[i];
-                if (!row[0]) continue;
+                MAIN_DATA = {}; // تصفير القاعدة
 
-                // تنظيف مفتاح البحث (رقم مسار) من أي فراغات مخفية
-                const massar = String(row[0]).replace(/\s/g, '').toUpperCase();
-                
-                const grades = [];
-                for (let j = 3; j < 21; j++) {
-                    grades.push(parseFloat(row[j]) || 0);
+                for (var i = 1; i < json.length; i++) {
+                    var row = json[i];
+                    if (!row || !row[0]) continue;
+
+                    // تنظيف مفتاح البحث (رقم مسار) من أي مسافات مخفية تماماً
+                    var cleanID = String(row[0]).replace(/\s+/g, '').toUpperCase();
+                    
+                    var g = [];
+                    for (var j = 3; j < 21; j++) {
+                        var val = parseFloat(row[j]);
+                        g.push(isNaN(val) ? 0 : val);
+                    }
+
+                    // حساب المعدل
+                    var sum = 0;
+                    for(var k=0; k<14; k++) sum += g[k];
+                    var average = (sum / 14).toFixed(2);
+
+                    MAIN_DATA[cleanID] = {
+                        name: row[1] || "بدون اسم",
+                        classRoom: row[2] || "غير محدد",
+                        grades: g,
+                        avg: average
+                    };
                 }
 
-                const arabicAvg = (grades.slice(0, 14).reduce((a, b) => a + b, 0) / 14).toFixed(2);
+                var count = Object.keys(MAIN_DATA).length;
+                status.innerHTML = "✅ تم التحميل! " + count + " تلميذ جاهزون للعرض.";
+                status.style.color = "green";
+                console.log("تم تحميل البيانات:", MAIN_DATA);
 
-                window.localDB[massar] = {
-                    n: row[1], // الاسم
-                    c: row[2], // القسم
-                    g: grades, // النقط
-                    a: arabicAvg // المعدل
-                };
+            } catch (err) {
+                status.innerHTML = "❌ خطأ في قراءة الملف: " + err.message;
+                status.style.color = "red";
             }
-
-            const count = Object.keys(window.localDB).length;
-            status.innerHTML = `<span style="color:green">✅ تم بنجاح! تم تحميل ${count} تلميذ.</span>`;
-            event.target.value = ''; // للسماح برفع نفس الملف مجدداً
-
-        } catch (e) {
-            status.innerHTML = `<span style="color:red">❌ فشل الرفع: ${e.message}</span>`;
-        }
+        };
+        reader.readAsArrayBuffer(file);
     }
 </script>
 </body>
