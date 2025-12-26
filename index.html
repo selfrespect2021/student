@@ -2,90 +2,145 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>نتائج مدرسة طه حسين - الأستاذ بلكاني</title>
+    <title>نتائج المراقبة المستمرة الأولى - عبد اللطيف بلكاني</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #2980b9; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; padding: 20px; }
-        .card { background: white; max-width: 800px; margin: auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        input[type="text"] { padding: 15px; width: 60%; border: 2px solid #ddd; border-radius: 10px; font-size: 1.1em; text-align: center; margin-bottom: 10px; }
-        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.1em; width: 80%; }
-        .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .result-table th, .result-table td { border: 1px solid #eee; padding: 10px; text-align: center; }
-        .result-table th { background: var(--primary); color: white; }
-        .student-info { background: #fff3cd; padding: 15px; border-radius: 10px; margin: 20px 0; font-weight: bold; font-size: 1.3em; color: #d35400; }
-        .admin-panel { margin-top: 40px; padding: 20px; border: 2px dashed #bbb; border-radius: 15px; background: #fafafa; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; text-align: center; padding: 20px; color: #333; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: inline-block; width: 95%; max-width: 800px; position: relative; }
+        h2 { color: #2c3e50; cursor: pointer; user-select: none; margin-bottom: 25px; border-bottom: 3px solid #3498db; display: inline-block; padding-bottom: 10px; }
+        .upload-section { border: 2px dashed #3498db; padding: 20px; margin-bottom: 20px; border-radius: 10px; background: #f0f9ff; }
+        input[type="text"] { padding: 15px; width: 70%; border: 1px solid #ddd; border-radius: 10px; font-size: 18px; text-align: center; margin-top: 10px; }
+        button { padding: 15px 30px; background: #3498db; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; border-radius: 10px; overflow: hidden; }
+        th, td { border: 1px solid #edf2f7; padding: 15px; text-align: center; }
+        th { background-color: #3498db; color: white; }
+        .result-header { margin-top: 20px; padding: 15px; background: #e1effe; border-radius: 10px; color: #1e429f; font-weight: bold; font-size: 1.4em; }
+        .total-row { background-color: #f9fafb; font-size: 1.5em; font-weight: bold; color: #d35400; border-top: 3px solid #3498db; }
+        .advice-box { margin-top: 20px; padding: 20px; border-radius: 12px; text-align: right; line-height: 1.8; font-size: 1.1em; }
+        .excellent { background-color: #def7ec; color: #03543f; border: 1px solid #84e1bc; }
+        .average { background-color: #fdf6b2; color: #723b13; border: 1px solid #fce96a; }
+        .low { background-color: #fde8e8; color: #9b1c1c; border: 1px solid #f8b4b4; }
+        .footer { margin-top: 40px; font-size: 0.95em; color: #555; border-top: 2px solid #eee; padding-top: 20px; font-weight: 500; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>📊 منظومة نتائج مدرسة طه حسين</h2>
-    <p>الأستاذ: عبد اللطيف بلكاني</p>
-
-    <div class="admin-panel">
-        <label>1️⃣ ارفع ملف (note final.xlsx) أولاً:</label><br><br>
-        <input type="file" id="fileUploader" accept=".xlsx, .xls, .csv">
-        <div id="uploadStatus" style="margin-top:10px; font-weight:bold; color:green;"></div>
+    <h2 id="title" ondblclick="toggleUpload()">استعلام عن نتائج المراقبة المستمرة الأولى</h2>
+    
+    <div id="uploadArea" class="upload-section hidden">
+        <p><b>إدارة النظام:</b> ارفع ملف note final.xlsx المحدث</p>
+        <input type="file" id="excelFile" accept=".xlsx, .xls">
     </div>
 
-    <div style="margin-top: 30px;">
-        <label>2️⃣ أدخل رقم مسار (مثال: G202028872):</label><br><br>
-        <input type="text" id="massarSearch" placeholder="أدخل الرقم هنا">
-        <button onclick="getResult()">عرض كشف النقط</button>
+    <div id="searchBox" class="hidden">
+        <p>أدخل رقم مسار الخاص بالمتعلم:</p>
+        <input type="text" id="studentID" placeholder="مثال: G176042802">
+        <br>
+        <button onclick="searchStudent()">عرض كشف النقاط</button>
     </div>
 
-    <div id="outputArea"></div>
+    <div id="output"></div>
+
+    <div class="footer">
+        جميع الحقوق محفوظة - الأستاذ: عبد اللطيف بلكاني © 2025
+    </div>
 </div>
 
 <script>
-    let db = {};
-    const subLabels = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2", "المعدل"];
+    let studentsDatabase = {};
 
-    document.getElementById('fileUploader').addEventListener('change', function(e) {
+    function toggleUpload() {
+        document.getElementById('uploadArea').classList.toggle('hidden');
+    }
+
+    window.onload = function() {
+        const savedData = localStorage.getItem('belgani_final_db');
+        if (savedData) {
+            studentsDatabase = JSON.parse(savedData);
+            document.getElementById('searchBox').classList.remove('hidden');
+        } else {
+            document.getElementById('uploadArea').classList.remove('hidden');
+        }
+    };
+
+    document.getElementById('excelFile').addEventListener('change', function(e) {
         const reader = new FileReader();
         reader.onload = function(event) {
             const data = new Uint8Array(event.target.result);
-            const wb = XLSX.read(data, {type: 'array'});
-            const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
-
-            db = {};
-            rows.forEach((row) => {
-                // البحث عن رقم مسار في العمود الثاني (Index 1) أو الثالث (Index 2)
-                let possibleId = String(row[1] || row[2]).trim().toUpperCase();
-                if (possibleId.startsWith('G')) {
-                    db[possibleId] = {
-                        name: row[2] || row[3], // الاسم
-                        class: row[3] || row[4], // القسم
-                        marks: row.slice(4, 19)  // النقط تبدأ من بعد القسم
-                    };
-                }
-            });
-
-            const count = Object.keys(db).length;
-            document.getElementById('uploadStatus').innerText = "✅ تم تحميل " + count + " تلميذ بنجاح!";
+            const workbook = XLSX.read(data, {type: 'array'});
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const range = XLSX.utils.sheet_to_json(sheet, {header: 1, raw: true, defval: ""});
+            processData(range);
         };
         reader.readAsArrayBuffer(e.target.files[0]);
     });
 
-    function getResult() {
-        const id = document.getElementById('massarSearch').value.trim().toUpperCase();
-        const area = document.getElementById('outputArea');
-        const s = db[id];
+    function processData(data) {
+        let tempDB = {};
+        // البحث عن سطر العناوين لتحديد المواد (عادة السطر 24 في ملفك)
+        let headerRowIndex = 23; 
+        let subjectsHeaders = data[headerRowIndex];
 
-        if (!s) {
-            area.innerHTML = "<p style='color:red; margin-top:20px;'>❌ لم يتم العثور على الرقم. تأكد من رفع الملف أولاً.</p>";
-            return;
+        // البيانات تبدأ من السطر 25 (Index 24)
+        for (let i = 24; i < data.length; i++) {
+            let row = data[i];
+            let id = String(row[2] || "").trim().toUpperCase(); // رقم مسار
+            let name = String(row[3] || "").trim(); // الإسم والنسب
+
+            if (id && id !== "" && id !== "رقم مسار") {
+                let studentGrades = [];
+                // المواد من العمود Index 4 إلى 17
+                for (let j = 4; j <= 17; j++) {
+                    let subjectName = subjectsHeaders[j] || "مكون";
+                    let score = row[j];
+                    let finalScore = (score !== "" && score !== undefined && score !== null) ? parseFloat(String(score).replace(',', '.')).toString() : "--";
+                    studentGrades.push({ subject: subjectName, score: finalScore });
+                }
+                
+                // المعدل العام في العمود Index 18
+                let rawAvg = row[18];
+                let finalAvg = (rawAvg !== "" && rawAvg !== undefined) ? parseFloat(String(rawAvg).replace(',', '.')) : NaN;
+                let formattedAvg = isNaN(finalAvg) ? "--" : finalAvg.toFixed(2);
+
+                tempDB[id] = { name: name, grades: studentGrades, average: formattedAvg };
+            }
         }
+        localStorage.setItem('belgani_final_db', JSON.stringify(tempDB));
+        studentsDatabase = tempDB;
+        alert("تم استيراد بيانات " + Object.keys(tempDB).length + " متعلم بنجاح!");
+        location.reload();
+    }
 
-        let html = `<div class="student-info">التلميذ(ة): ${s.name} <br> القسم: ${s.class}</div>`;
-        html += `<table class="result-table"><thead><tr><th>المكون</th><th>النقطة</th></tr></thead><tbody>`;
-        subLabels.forEach((name, i) => {
-            html += `<tr><td>${name}</td><td>${s.marks[i] || 0}</td></tr>`;
-        });
-        html += `</tbody></table>`;
-        area.innerHTML = html;
+    function getAdvice(avg) {
+        let score = parseFloat(avg);
+        if (isNaN(score)) return null;
+        if (score >= 8.5) return { class: 'excellent', text: '<b>توجيه تربوي:</b> ممتـاز! نتيجتك متميزة جداً يا بطل. استمر في التألق.' };
+        if (score >= 6.5) return { class: 'average', text: '<b>توجيه تربوي:</b> عمل جيد. نتيجتك مرضية ويمكنك تحسينها أكثر في الدورة القادمة.' };
+        return { class: 'low', text: '<b>نصيحة تربوية:</b> لا تقلق، هذه مجرد محطة. ضاعف مجهودك وستتحسن نتائجك حتماً بالاجتهاد.' };
+    }
+
+    function searchStudent() {
+        const idInput = document.getElementById('studentID').value.trim().toUpperCase();
+        const output = document.getElementById('output');
+        const student = studentsDatabase[idInput];
+
+        if (student) {
+            let advice = getAdvice(student.average);
+            let html = `<div class="result-header">المتعلم(ة): ${student.name}</div>`;
+            html += `<table><tr><th>المادة / الكفاية</th><th>النقطة</th></tr>`;
+            student.grades.forEach(item => {
+                html += `<tr><td>${item.subject}</td><td><b>${item.score}</b></td></tr>`;
+            });
+            html += `<tr class="total-row"><td>المعدل العام</td><td>${student.average}</td></tr></table>`;
+            if (advice) html += `<div class="advice-box ${advice.class}">${advice.text}</div>`;
+            output.innerHTML = html;
+        } else {
+            output.innerHTML = `<p style='color:red; margin-top:20px; font-weight:bold;'>❌ عذراً، رقم مسار غير موجود في قاعدة البيانات.</p>`;
+        }
     }
 </script>
+
 </body>
 </html>
