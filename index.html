@@ -5,55 +5,40 @@
     <title>نتائج مدرسة طه حسين - الأستاذ بلكاني</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #2980b9; --success: #27ae60; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .card { background: white; max-width: 800px; margin: 20px auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        .header { border-bottom: 3px solid var(--accent); margin-bottom: 20px; padding-bottom: 10px; }
-        input[type="text"] { padding: 15px; width: 80%; border: 2px solid #ddd; border-radius: 12px; font-size: 1.2em; text-align: center; margin-bottom: 15px; }
-        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 85%; font-size: 1.1em; transition: 0.3s; margin-bottom: 10px; }
-        button:hover { background: #1f5f8b; transform: translateY(-2px); }
+        :root { --primary: #2c3e50; --accent: #2980b9; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; text-align: center; }
+        .card { background: white; max-width: 800px; margin: auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        input[type="text"] { padding: 12px; width: 70%; border: 2px solid #ddd; border-radius: 10px; margin-bottom: 10px; }
+        button { background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; }
         .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .result-table th, .result-table td { border: 1px solid #eee; padding: 10px; text-align: center; }
-        .result-table th { background: var(--primary); color: white; font-size: 0.85em; }
-        .student-name { color: #e67e22; font-size: 1.6em; font-weight: bold; margin: 15px 0; }
-        .avg-row { background: #fff3cd; font-weight: bold; font-size: 1.2em; }
-        .admin-panel { margin-top: 30px; padding: 20px; border-top: 2px dashed #ccc; display: none; background: #fdf2f2; border-radius: 15px; }
-        .btn-upload { background: #27ae60 !important; }
-        .btn-download { background: #e67e22 !important; }
-        .admin-toggle { text-align: center; margin-top: 20px; font-size: 0.7em; color: #bbb; cursor: pointer; user-select: none; }
-        #updateStatus { margin-top: 10px; font-size: 0.9em; padding: 10px; border-radius: 8px; }
+        .result-table th, .result-table td { border: 1px solid #eee; padding: 10px; }
+        .result-table th { background: var(--primary); color: white; }
+        .admin-panel { margin-top: 30px; padding: 20px; border-top: 2px dashed #ccc; display: none; background: #fdf2f2; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="header">
-        <h2>نتائج المرحلة الأولى - اللغة العربية</h2>
-        <p>مدرسة طه حسين | الأستاذ: بلكاني</p>
-    </div>
-
-    <input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (G...)">
-    <button onclick="displayResult()">عرض كشف النقط التفصيلي</button>
-
+    <h2>نتائج مدرسة طه حسين</h2>
+    <p>الأستاذ: بلكاني</p>
+    <input type="text" id="massarID" placeholder="أدخل رقم مسار">
+    <button onclick="displayResult()">عرض النتيجة</button>
     <div id="output"></div>
-
-    <div class="admin-toggle" onclick="toggleAdmin()">.</div>
+    <div style="margin-top:50px; cursor:pointer; color:#eee" onclick="document.getElementById('adminPanel').style.display='block'">.</div>
 
     <div class="admin-panel" id="adminPanel">
-        <h3 style="color: #e74c3c;">⚙️ لوحة التحكم</h3>
-        <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
-        
-        <button class="btn-upload" onclick="document.getElementById('excelFile').click()">📤 1. رفع ملف Excel</button>
-        <button id="downloadBtn" class="btn-download" onclick="generateNewHTML()" style="display:none;">💾 2. تحميل الكود (التنسيق المعتمد)</button>
-
-        <div id="updateStatus"></div>
+        <h3>لوحة التحكم</h3>
+        <input type="file" id="excelFile" accept=".xlsx" onchange="handleFileUpload(event)">
+        <br><br>
+        <button onclick="generateNewHTML()" style="background:#27ae60">حفظ الملف بالترتيب المطلوب</button>
     </div>
 </div>
 
 <script id="dbSource">
-    let DB = {
-        "G183107408": { n: "الدرقاوي عز العرب", c: "6APG-1", g: [2,0,0,0,2,4,2.5,6,0,0,4.5,1,3,0.25,0,2,2,7.5], a: "1.80" }
-    };
+// الترتيب المطلوب: n ثم c ثم g ثم a
+let DB = {
+    "G183107408": { n: "الدرقاوي عز العرب", c: "6APG-1", g: [2,0,0,0,2,4,2.5,6,0,0,4.5,1,3,0.25,0,2,2,7.5], a: "1.80" }
+};
 </script>
 
 <script>
@@ -63,21 +48,15 @@
     function displayResult() {
         const id = document.getElementById('massarID').value.trim().toUpperCase();
         const s = DB[id];
-        const out = document.getElementById('output');
-        if (!s) { out.innerHTML = "<p style='color:red; margin-top:20px;'>عذراً، الرمز غير موجود.</p>"; return; }
-        let h = `<div class="student-name">${s.n}</div><div class="class-badge">القسم: ${s.c}</div>`;
-        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        labels.forEach((l, idx) => { h += `<tr><td>${l}</td><td>${desc[l]}</td><td>${s.g[idx]}</td></tr>`; });
-        h += `<tr class="avg-row"><td colspan="2">المعدل العام</td><td>${s.a}</td></tr></table>`;
-        out.innerHTML = h;
+        if (!s) { alert("غير موجود"); return; }
+        let h = `<h3>${s.n}</h3><table class="result-table">`;
+        labels.forEach((l, i) => { h += `<tr><td>${desc[l]}</td><td>${s.g[i]}</td></tr>`; });
+        h += `<tr style="background:#eee"><td>المعدل</td><td>${s.a}</td></tr></table>`;
+        document.getElementById('output').innerHTML = h;
     }
-
-    let clicks = 0;
-    function toggleAdmin() { clicks++; if(clicks >= 5) document.getElementById('adminPanel').style.display='block'; }
 
     async function handleFileUpload(event) {
         const file = event.target.files[0];
-        if (!file) return;
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data, { type: 'array' });
         const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
@@ -91,29 +70,30 @@
             newDB[String(row[0]).trim().toUpperCase()] = { n: row[1], c: row[2], g: g, a: avg };
         }
         DB = newDB;
-        document.getElementById('updateStatus').innerHTML = "✅ البيانات جاهزة للتحميل.";
-        document.getElementById('downloadBtn').style.display = 'block';
+        alert("تمت المعالجة بنجاح");
     }
 
     function generateNewHTML() {
-        // بناء نص DB يدوياً لفرض التنسيق: "رقم مسار": { n: "...", c: "...", g: [...], a: "..." }
+        // بناء النص يدوياً كـ "نص خام" لمنع المتصفح من إعادة الترتيب
         let dbString = 'let DB = {\n';
-        const entries = Object.entries(DB);
-        entries.forEach(([id, data], index) => {
-            const comma = (index === entries.length - 1) ? "" : ",";
-            // السطر يُبنى يدوياً هنا لضمان عدم تغيير الترتيب من قبل المتصفح
-            dbString += `        "${id}": { n: "${data.n}", c: "${data.c}", g: [${data.g.join(',')}], a: "${data.a}" }${comma}\n`;
+        const keys = Object.keys(DB);
+        
+        keys.forEach((id, index) => {
+            const entry = DB[id];
+            const isLast = index === keys.length - 1;
+            // بناء السطر يدوياً بالترتيب المطلوب تماماً
+            dbString += `        "${id}": { n: "${entry.n}", c: "${entry.c}", g: [${entry.g.join(', ')}], a: "${entry.a}" }${isLast ? '' : ','}\n`;
         });
         dbString += '    };';
 
-        let fullHTML = document.documentElement.outerHTML;
-        // استبدال النص القديم بالنص الجديد المنسق
-        const finalHTML = fullHTML.replace(/let DB = \{[\s\S]*?\};/, dbString);
+        const currentHTML = document.documentElement.outerHTML;
+        // استبدال كود الـ DB القديم بالنص الجديد
+        const finalHTML = currentHTML.replace(/let DB = \{[\s\S]*?\};/, dbString);
 
         const blob = new Blob([finalHTML], { type: 'text/html' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'results_updated.html';
+        a.download = 'school_results_fixed.html';
         a.click();
     }
 </script>
