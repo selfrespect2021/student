@@ -25,6 +25,8 @@
         .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; display: none; }
         .admin-panel button { background: #e74c3c; margin-bottom: 10px; }
         .admin-panel button:hover { background: #c0392b; }
+        .download-btn { background: #27ae60 !important; }
+        .download-btn:hover { background: #229954 !important; }
         .admin-toggle { text-align: center; margin-top: 20px; font-size: 0.7em; color: #bbb; cursor: pointer; user-select: none; }
         #updateStatus { margin-top: 10px; font-size: 0.9em; padding: 10px; border-radius: 8px; }
         .info-box { background: #fff3cd; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: right; font-size: 0.85em; line-height: 1.6; }
@@ -49,7 +51,7 @@
         <button onclick="document.getElementById('excelFile').click()">
             📤 رفع ملف Excel لتحديث النقط
         </button>
-        <button onclick="downloadUpdatedCode()" style="background: #27ae60; margin-top: 10px;">
+        <button class="download-btn" onclick="downloadUpdatedCode()">
             💾 تنزيل الكود المحدث
         </button>
         <div id="updateStatus"></div>
