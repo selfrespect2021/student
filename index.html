@@ -300,6 +300,267 @@
     }
 
     function downloadUpdatedCode() {
+        // تحويل قاعدة البيانات إلى صيغة أفقية
+        let dbString = '{\n';
+        const entries = Object.entries(DB);
+        entries.forEach(([key, value], index) => {
+            const isLast = index === entries.length - 1;
+            dbString += `        "${key}": { n: "${value.n}", c: "${value.c}", g: [${value.g.join(',')}], a: "${value.a}" }${isLast ? '' : ','}\n`;
+        });
+        dbString += '    }';
+
+        const htmlContent = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>نتائج مدرسة طه حسين - الأستاذ بلكاني</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>
+    <style>
+        :root { --primary: #2c3e50; --accent: #2980b9; --success: #27ae60; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .card { background: white; max-width: 800px; margin: 20px auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        .header { border-bottom: 3px solid var(--accent); margin-bottom: 20px; padding-bottom: 10px; }
+        input[type="text"] { padding: 15px; width: 80%; border: 2px solid #ddd; border-radius: 12px; font-size: 1.2em; text-align: center; margin-bottom: 15px; }
+        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 85%; font-size: 1.1em; transition: 0.3s; }
+        button:hover { background: #1f5f8b; transform: translateY(-2px); }
+        .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .result-table th, .result-table td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        .result-table th { background: var(--primary); color: white; font-size: 0.85em; }
+        .student-name { color: #e67e22; font-size: 1.6em; font-weight: bold; margin: 15px 0; }
+        .avg-row { background: #fff3cd; font-weight: bold; font-size: 1.2em; }
+        .info-panel { background: #e8f4f8; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: right; font-size: 0.9em; line-height: 1.6; }
+        .tips-panel { background: #f0fdf4; border-right: 5px solid var(--success); padding: 15px; margin-top: 15px; text-align: right; line-height: 1.8; }
+        .footer { margin-top: 30px; font-size: 0.8em; color: #888; border-top: 1px solid #eee; padding-top: 15px; }
+        .class-badge { display: inline-block; background: #3498db; color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; margin: 5px 0; }
+        h3 { color: var(--primary); margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
+        .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; display: none; }
+        .admin-panel button { background: #e74c3c; margin-bottom: 10px; }
+        .admin-panel button:hover { background: #c0392b; }
+        .download-btn { background: #27ae60 !important; }
+        .download-btn:hover { background: #229954 !important; }
+        #updateStatus { margin-top: 10px; font-size: 0.9em; padding: 10px; border-radius: 8px; }
+        .info-box { background: #fff3cd; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: right; font-size: 0.85em; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <h2>نتائج المرحلة الأولى - اللغة العربية</h2>
+        <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
+    </div>
+
+    <input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (G...)">
+    <button onclick="displayResult()">عرض كشف النقط التفصيلي</button>
+
+    <div id="output"></div>
+
+    <div class="admin-panel" id="adminPanel">
+        <h3 style="color: #e74c3c;">⚙️ لوحة التحكم - تحديث النقط</h3>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
+        <button onclick="document.getElementById('excelFile').click()">
+            📤 رفع ملف Excel لتحديث النقط
+        </button>
+        <button class="download-btn" onclick="downloadUpdatedCode()">
+            💾 تنزيل الكود المحدث
+        </button>
+        <div id="updateStatus"></div>
+        
+        <div class="info-box">
+            <strong>📋 تنسيق الملف المطلوب:</strong><br>
+            • العمود الأول: رقم مسار (G...)<br>
+            • العمود الثاني: الاسم الكامل<br>
+            • العمود الثالث: القسم<br>
+            • الأعمدة 4-21: النقط بالترتيب (PO2, V1, V2, CO1, CO2, LF2, LC1, LC2, LC3, LC4, PE1, PE2, OL1, OL2, HIST, GEO, CIV, ISLAM)
+        </div>
+    </div>
+
+    <div class="footer">
+        هذا النظام مخصص لتلاميذ الأستاذ بلكاني بمدرسة طه حسين<br>
+        الموسم الدراسي 2025/2026
+    </div>
+</div>
+
+<script>
+    const labels = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2", "HIST", "GEO", "CIV", "ISLAM"];
+    const desc = {
+        "PO2": "التواصل الشفهي", "V1": "المعجم 1", "V2": "المعجم 2", "CO1": "فهم المسموع 1", "CO2": "فهم المسموع 2",
+        "LF2": "طلاقة القراءة", "LC1": "فهم المقروء 1", "LC2": "فهم المقروء 2", "LC3": "فهم المقروء 3", "LC4": "فهم المقروء 4",
+        "PE1": "الإنتاج الكتابي 1", "PE2": "الإنتاج الكتابي 2", "OL1": "الظواهر اللغوية 1", "OL2": "الظواهر اللغوية 2",
+        "HIST": "التاريخ", "GEO": "الجغرافية", "CIV": "التربية المدنية", "ISLAM": "التربية الإسلامية"
+    };
+
+    let DB = ${dbString};
+
+    function displayResult() {
+        const id = document.getElementById('massarID').value.trim().toUpperCase();
+        const s = DB[id];
+        const out = document.getElementById('output');
+        
+        if (!s) {
+            out.innerHTML = "<p style='color:red; margin-top:20px;'>عذراً، الرمز غير موجود. تأكد من إدخال رقم مسار الصحيح.</p>";
+            return;
+        }
+        
+        let h = '<div class="student-name">' + s.n + '</div>';
+        h += '<div class="class-badge">القسم: ' + s.c + '</div>';
+        
+        h += '<h3>📚 وحدة اللغة العربية</h3>';
+        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
+        const arabicLabels = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2"];
+        for (let i = 0; i < arabicLabels.length; i++) {
+            const l = arabicLabels[i];
+            const idx = labels.indexOf(l);
+            h += '<tr><td>' + l + '</td><td>' + desc[l] + '</td><td>' + s.g[idx] + '</td></tr>';
+        }
+        h += '<tr class="avg-row"><td colspan="2">معدل مادة اللغة العربية</td><td>' + s.a + '</td></tr></table>';
+        
+        const socAvg = ((s.g[14] + s.g[15] + s.g[16]) / 3).toFixed(2);
+        h += '<h3>🌍 وحدة الاجتماعيات</h3>';
+        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
+        h += '<tr><td>HIST</td><td>' + desc["HIST"] + '</td><td>' + s.g[14] + '</td></tr>';
+        h += '<tr><td>GEO</td><td>' + desc["GEO"] + '</td><td>' + s.g[15] + '</td></tr>';
+        h += '<tr><td>CIV</td><td>' + desc["CIV"] + '</td><td>' + s.g[16] + '</td></tr>';
+        h += '<tr class="avg-row"><td colspan="2">معدل الاجتماعيات</td><td>' + socAvg + '</td></tr></table>';
+        
+        h += '<h3>🕌 وحدة التربية الإسلامية</h3>';
+        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
+        h += '<tr><td>ISLAM</td><td>' + desc["ISLAM"] + '</td><td>' + s.g[17] + '</td></tr>';
+        h += '<tr class="avg-row"><td colspan="2">معدل التربية الإسلامية</td><td>' + s.g[17].toFixed(2) + '</td></tr></table>';
+
+        h += '<div class="info-panel">';
+        h += '<strong>💡 ملاحظة توجيهية:</strong><br>';
+        if (parseFloat(s.a) >= 8) {
+            h += 'أداء متميز جداً! استمر في هذا المسار وتوسع في القراءة الحرة لتنمية رصيدك المعرفي.';
+        } else if (parseFloat(s.a) >= 5) {
+            h += 'نتيجتك متوسطة ومطمئنة، لكن هناك مجال كبير للتحسن، خاصة في مكونات الإنتاج الكتابي والظواهر اللغوية.';
+        } else {
+            h += 'هذه النتيجة تشير إلى وجود صعوبات في بعض التعلمات الأساسية. ننصح بالتركيز أكثر على قواعد اللغة والتدرب على القراءة اليومية.';
+        }
+        h += '</div>';
+
+        h += '<div class="tips-panel">';
+        h += '<strong>📌 نصائح الأستاذ بلكاني للمرحلة المقبلة:</strong><br>';
+        h += '• المراجعة الدائمة للظواهر اللغوية (صرف، تحويل، إملاء).<br>';
+        h += '• قراءة قصص قصيرة باللغة العربية لتقوية "فهم المقروء".<br>';
+        h += '• الاهتمام بجودة الخط وتنظيم ورقة التحرير.';
+        h += '</div>';
+
+        out.innerHTML = h;
+    }
+
+    function checkAdminAccess() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('admin') === 'true') {
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+    }
+
+    window.onload = checkAdminAccess;
+
+    async function handleFileUpload(event) {
+        const file = event.target.files[0];
+        const status = document.getElementById('updateStatus');
+        
+        if (!file) {
+            status.style.background = '#ffebee';
+            status.innerHTML = '<span style="color: red;">❌ لم يتم اختيار أي ملف</span>';
+            return;
+        }
+
+        status.style.background = '#e3f2fd';
+        status.innerHTML = '<span style="color: blue;">⏳ جاري معالجة الملف...</span>';
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            if (jsonData.length < 2) {
+                status.style.background = '#ffebee';
+                status.innerHTML = '<span style="color: red;">❌ الملف فارغ أو لا يحتوي على بيانات كافية</span>';
+                return;
+            }
+
+            let updatedCount = 0;
+            let newCount = 0;
+            
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                
+                if (!row[0]) continue;
+                
+                const massarID = String(row[0]).trim().toUpperCase();
+                const name = row[1] || '';
+                const classRoom = row[2] || '';
+                
+                const grades = [];
+                for (let j = 3; j < 21 && j < row.length; j++) {
+                    const grade = parseFloat(row[j]) || 0;
+                    grades.push(grade);
+                }
+                
+                const arabicGrades = grades.slice(0, 14).filter(g => g > 0);
+                const average = arabicGrades.length > 0 
+                    ? (arabicGrades.reduce((a, b) => a + b, 0) / arabicGrades.length).toFixed(2)
+                    : "0.00";
+                
+                if (DB[massarID]) {
+                    updatedCount++;
+                } else {
+                    newCount++;
+                }
+                
+                DB[massarID] = {
+                    n: name,
+                    c: classRoom,
+                    g: grades,
+                    a: average
+                };
+            }
+            
+            status.style.background = '#e8f5e9';
+            status.innerHTML = \`<span style="color: green;"><strong>✅ تم التحديث بنجاح!</strong><br>
+                📝 تم تحديث \${updatedCount} تلميذ(ة)<br>
+                ➕ تمت إضافة \${newCount} تلميذ(ة) جديد(ة)<br>
+                📊 إجمالي التلاميذ: \${Object.keys(DB).length}</span>\`;
+            
+            event.target.value = '';
+            
+        } catch (error) {
+            console.error(error);
+            status.style.background = '#ffebee';
+            status.innerHTML = '<span style="color: red;">❌ حدث خطأ في معالجة الملف. تأكد من أن الملف بصيغة Excel صحيحة.</span>';
+        }
+    }
+
+    function downloadUpdatedCode() {
+        alert('Function will be implemented');
+    }
+<\/script>
+
+</body>
+</html>`;
+
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'results-updated-' + new Date().toISOString().slice(0,10) + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        const status = document.getElementById('updateStatus');
+        status.style.background = '#e8f5e9';
+        status.innerHTML = '<span style="color: green;">✅ تم تنزيل الكود المحدث بنجاح!</span>';
+    }
+
         const htmlContent = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
