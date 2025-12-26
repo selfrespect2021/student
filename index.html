@@ -44,14 +44,13 @@
         <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
         
         <button class="btn-upload" onclick="document.getElementById('excelFile').click()">📤 1. رفع ملف Excel</button>
-        <button id="downloadBtn" class="btn-download" onclick="generateNewHTML()" style="display:none;">💾 2. تحميل الكود بتنسيق أفقي</button>
+        <button id="downloadBtn" class="btn-download" onclick="generateNewHTML()" style="display:none;">💾 2. تحميل الكود (الترتيب الدقيق)</button>
 
         <div id="updateStatus"></div>
     </div>
 </div>
 
 <script id="dbContent">
-    // سيتم استبدال هذا المتغير بالكامل عند تحميل الملف الجديد
     let DB = {
         "G183107408": { n: "الدرقاوي عز العرب", c: "6APG-1", g: [2,0,0,0,2,4,2.5,6,0,0,4.5,1,3,0.25,0,2,2,7.5], a: "1.80" }
     };
@@ -66,12 +65,9 @@
         const s = DB[id];
         const out = document.getElementById('output');
         if (!s) { out.innerHTML = "<p style='color:red; margin-top:20px;'>عذراً، الرمز غير موجود.</p>"; return; }
-        
         let h = `<div class="student-name">${s.n}</div><div class="class-badge">القسم: ${s.c}</div>`;
         h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        labels.forEach((l, idx) => {
-            h += `<tr><td>${l}</td><td>${desc[l]}</td><td>${s.g[idx]}</td></tr>`;
-        });
+        labels.forEach((l, idx) => { h += `<tr><td>${l}</td><td>${desc[l]}</td><td>${s.g[idx]}</td></tr>`; });
         h += `<tr class="avg-row"><td colspan="2">المعدل العام</td><td>${s.a}</td></tr></table>`;
         out.innerHTML = h;
     }
@@ -85,50 +81,39 @@
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data, { type: 'array' });
         const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-        
         let newDB = {};
         for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i];
             if (!row[0]) continue;
             const grades = [];
             for (let j = 3; j < 21; j++) grades.push(Number(row[j]) || 0);
-            
-            // حساب المعدل (أول 14 مكون للغة العربية)
-            const arb = grades.slice(0, 14);
-            const avg = (arb.reduce((a,b)=>a+b,0)/14).toFixed(2);
-            
-            newDB[String(row[0]).trim().toUpperCase()] = {
-                n: row[1],
-                c: row[2],
-                g: grades,
-                a: avg
-            };
+            const avg = (grades.slice(0, 14).reduce((a,b)=>a+b,0)/14).toFixed(2);
+            newDB[String(row[0]).trim().toUpperCase()] = { n: row[1], c: row[2], g: grades, a: avg };
         }
         DB = newDB;
-        document.getElementById('updateStatus').innerHTML = "<span style='color:green;'>✅ تمت معالجة البيانات بنجاح.</span>";
+        document.getElementById('updateStatus').innerHTML = "✅ تم التحديث بنجاح.";
         document.getElementById('downloadBtn').style.display = 'block';
     }
 
     function generateNewHTML() {
-        // بناء نص DB يدوياً بالترتيب المطلوب تماماً
+        // بناء النص يدوياً لفرض الترتيب الصارم: n ثم c ثم g ثم a
         let dbString = 'let DB = {\n';
         const entries = Object.entries(DB);
-        
         entries.forEach(([id, data], index) => {
             const comma = (index === entries.length - 1) ? "" : ",";
-            // التنسيق المطلوب: "ID": { n: "...", c: "...", g: [...], a: "..." }
+            // هنا نتحكم بالترتيب يدوياً: n -> c -> g -> a
             dbString += `        "${id}": { n: "${data.n}", c: "${data.c}", g: [${data.g.join(',')}], a: "${data.a}" }${comma}\n`;
         });
         dbString += '    };';
 
-        const currentHTML = document.documentElement.outerHTML;
-        // استبدال كود الـ DB القديم بالجديد المنسق يدوياً
-        const updatedHTML = currentHTML.replace(/let DB = \{[\s\S]*?\};/, dbString);
+        let fullHTML = document.documentElement.outerHTML;
+        // استبدال كود الـ DB باستخدام تعبير منتظم يغطي كل شيء بين الأقواس
+        const finalHTML = fullHTML.replace(/let DB = \{[\s\S]*?\};/, dbString);
 
-        const blob = new Blob([updatedHTML], { type: 'text/html' });
+        const blob = new Blob([finalHTML], { type: 'text/html' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'results_fixed.html';
+        a.download = 'results_perfect_format.html';
         a.click();
     }
 </script>
