@@ -22,7 +22,8 @@
         .footer { margin-top: 30px; font-size: 0.8em; color: #888; border-top: 1px solid #eee; padding-top: 15px; }
         .class-badge { display: inline-block; background: #3498db; color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; margin: 5px 0; }
         h3 { color: var(--primary); margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
-        .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; display: none; }
+        .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; }
+        .admin-panel.hidden { display: none; }
         .admin-panel button { background: #e74c3c; margin-bottom: 10px; }
         .admin-panel button:hover { background: #c0392b; }
         .download-btn { background: #27ae60 !important; }
@@ -45,7 +46,7 @@
 
     <div id="output"></div>
 
-    <div class="admin-panel" id="adminPanel">
+    <div class="admin-panel hidden" id="adminPanel">
         <h3 style="color: #e74c3c;">⚙️ لوحة التحكم - تحديث النقط</h3>
         <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
         <button onclick="document.getElementById('excelFile').click()">
@@ -215,7 +216,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const adminPanel = document.getElementById('adminPanel');
         if (urlParams.get('admin') === 'true') {
-            adminPanel.style.display = 'block';
+            adminPanel.classList.remove('hidden');
             console.log('✅ Admin panel activated');
         } else {
             console.log('ℹ️ Admin parameter not found. Use ?admin=true in URL');
@@ -224,12 +225,12 @@
 
     function testAdmin() {
         const adminPanel = document.getElementById('adminPanel');
-        if (adminPanel.style.display === 'block') {
-            adminPanel.style.display = 'none';
-            alert('تم إخفاء لوحة التحكم');
+        if (adminPanel.classList.contains('hidden')) {
+            adminPanel.classList.remove('hidden');
+            alert('✅ تم تفعيل لوحة التحكم!');
         } else {
-            adminPanel.style.display = 'block';
-            alert('تم تفعيل لوحة التحكم!');
+            adminPanel.classList.add('hidden');
+            alert('❌ تم إخفاء لوحة التحكم');
         }
     }
 
