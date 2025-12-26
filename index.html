@@ -5,92 +5,96 @@
     <title>نتائج مدرسة طه حسين - الأستاذ بلكاني</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #2980b9; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; text-align: center; }
-        .card { background: white; max-width: 800px; margin: auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        input[type="text"] { padding: 15px; width: 70%; border: 2px solid #ddd; border-radius: 10px; font-size: 1.1em; margin-bottom: 10px; }
-        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        :root { --p: #2c3e50; --a: #2980b9; --s: #27ae60; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
+        .card { background: white; max-width: 800px; margin: auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        input[type="text"] { padding: 15px; width: 60%; border: 2px solid #ddd; border-radius: 10px; font-size: 1.1em; text-align: center; }
+        button { background: var(--a); color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.1em; }
         .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .result-table th, .result-table td { border: 1px solid #eee; padding: 12px; text-align: center; }
-        .result-table th { background: var(--primary); color: white; }
+        .result-table th, .result-table td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        .result-table th { background: var(--p); color: white; }
         .student-info { background: #fff3cd; padding: 15px; border-radius: 10px; margin: 20px 0; font-weight: bold; font-size: 1.3em; color: #d35400; }
-        .admin-section { margin-top: 40px; padding: 20px; border: 2px dashed #bbb; border-radius: 15px; background: #fafafa; }
+        .admin { margin-top: 40px; padding: 20px; border: 2px dashed #bbb; border-radius: 15px; background: #fafafa; }
+        .success { color: var(--s); font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>📊 منظومة عرض النتائج التفصيلية</h2>
+    <h2>📊 منظومة النتائج - المرحلة الأولى</h2>
     <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
 
-    <div class="admin-section">
-        <label>1. ارفع ملف (note final.xlsx) هنا:</label><br><br>
-        <input type="file" id="excelFile" accept=".xlsx, .xls">
-        <div id="status" style="margin-top:10px; font-weight:bold;"></div>
+    <div class="admin">
+        <label>1️⃣ ارفع ملف (note final) أولاً:</label><br><br>
+        <input type="file" id="fileIn" accept=".xlsx, .xls, .csv">
+        <div id="status" class="success"></div>
     </div>
 
-    <hr style="margin: 30px 0; opacity: 0.2;">
-
-    <div>
-        <label>2. ابحث عن النتيجة:</label><br><br>
-        <input type="text" id="massarInput" placeholder="أدخل رقم مسار">
-        <button onclick="showResult()">عرض النقط</button>
+    <div style="margin-top: 30px;">
+        <label>2️⃣ أدخل رقم مسار للبحث:</label><br><br>
+        <input type="text" id="massarId" placeholder="مثلاً: G123456789">
+        <button onclick="search()">عرض النتيجة</button>
     </div>
 
-    <div id="resultArea"></div>
+    <div id="output"></div>
 </div>
 
 <script>
-    let studentsDB = {};
-    const subNames = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2", "HIST", "GEO", "CIV", "ISLAM"];
-    const subArabic = ["التواصل الشفهي", "المعجم 1", "المعجم 2", "فهم المسموع 1", "فهم المسموع 2", "طلاقة القراءة", "فهم المقروء 1", "فهم المقروء 2", "فهم المقروء 3", "فهم المقروء 4", "الإنتاج الكتابي 1", "الإنتاج الكتابي 2", "الظواهر اللغوية 1", "الظواهر اللغوية 2", "التاريخ", "الجغرافيا", "التربية المدنية", "التربية الإسلامية"];
+    let studentsData = {};
+    const subNames = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2", "المعدل"];
 
-    document.getElementById('excelFile').addEventListener('change', function(e) {
+    document.getElementById('fileIn').addEventListener('change', function(e) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+        reader.onload = function(event) {
+            const data = new Uint8Array(event.result || event.target.result);
+            const wb = XLSX.read(data, {type: 'array'});
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
 
-            studentsDB = {};
-            // نبدأ من السطر الثاني لتخطي العناوين
-            for(let i=1; i<json.length; i++) {
-                let row = json[i];
-                if(row[0]) {
-                    let id = String(row[0]).trim().toUpperCase();
-                    studentsDB[id] = {
-                        name: row[1],
-                        class: row[2] || "غير محدد",
-                        grades: row.slice(3, 21) // النقط من العمود 4 إلى 21
+            studentsData = {};
+            // نبدأ البحث من السطر 20 فما فوق لضمان تجاوز الترويسة الفارغة
+            rows.forEach(row => {
+                // في ملفك: رقم مسار في العمود الثالث (Index 2)
+                if (row && row[2] && String(row[2]).startsWith('G')) {
+                    let id = String(row[2]).trim().toUpperCase();
+                    studentsData[id] = {
+                        name: row[3], // الاسم في العمود الرابع
+                        class: row[4], // القسم في العمود الخامس
+                        marks: row.slice(5, 20) // النقط تبدأ من العمود السادس
                     };
                 }
+            });
+
+            const count = Object.keys(studentsData).length;
+            if(count > 0) {
+                document.getElementById('status').innerText = "✅ تم بنجاح! تم تحميل بيانات " + count + " تلميذ.";
+            } else {
+                document.getElementById('status').innerText = "❌ لم يتم العثور على بيانات. تأكد من الملف.";
+                document.getElementById('status').style.color = "red";
             }
-            document.getElementById('status').innerHTML = "✅ تم ربط " + Object.keys(studentsDB).length + " تلميذ بنجاح!";
-            document.getElementById('status').style.color = "green";
         };
         reader.readAsArrayBuffer(e.target.files[0]);
     });
 
-    function showResult() {
-        const id = document.getElementById('massarInput').value.trim().toUpperCase();
-        const area = document.getElementById('resultArea');
-        const s = studentsDB[id];
+    function search() {
+        const id = document.getElementById('massarId').value.trim().toUpperCase();
+        const out = document.getElementById('output');
+        const s = studentsData[id];
 
-        if(!s) {
-            area.innerHTML = "<p style='color:red; margin-top:20px;'>❌ هذا الرقم غير موجود. تأكد من رفع الملف الصحيح.</p>";
+        if (!s) {
+            out.innerHTML = "<p style='color:red; margin-top:20px;'>❌ الرقم غير موجود. تأكد من رفع الملف ومن كتابة الرقم بشكل صحيح.</p>";
             return;
         }
 
-        let html = `<div class="student-info">التلميذ: ${s.name} <br> القسم: ${s.class}</div>`;
-        html += `<table class="result-table"><tr><th>المكون</th><th>النقطة</th></tr>`;
+        let html = `<div class="student-info">التلميذ(ة): ${s.name} <br> القسم: ${s.class}</div>`;
+        html += `<table class="result-table"><thead><tr><th>المكون</th><th>النقطة</th></tr></thead><tbody>`;
         
-        subArabic.forEach((name, index) => {
-            html += `<tr><td>${name}</td><td>${s.grades[index] || 0}</td></tr>`;
+        subNames.forEach((name, i) => {
+            html += `<tr><td>${name}</td><td>${s.marks[i] || 0}</td></tr>`;
         });
 
-        html += `</table>`;
-        area.innerHTML = html;
+        html += `</tbody></table>`;
+        out.innerHTML = html;
     }
 </script>
 </body>
