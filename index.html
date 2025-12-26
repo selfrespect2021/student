@@ -2,164 +2,106 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نتائج مدرسة طه حسين - الأستاذ بلكاني</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #2980b9; --success: #27ae60; --bg: #f4f7f6; --error: #e74c3c; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .card { background: white; max-width: 800px; margin: 10px auto; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        .header { border-bottom: 3px solid var(--accent); margin-bottom: 20px; padding-bottom: 10px; }
-        input[type="text"] { padding: 15px; width: 80%; border: 2px solid #ddd; border-radius: 12px; font-size: 1.2em; text-align: center; margin-bottom: 10px; }
-        button { background: var(--accent); color: white; border: none; padding: 15px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 85%; font-size: 1.1em; transition: 0.3s; margin: 5px 0; }
-        .result-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border: 2px solid var(--primary); }
-        .result-table th, .result-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        .result-table th { background: var(--primary); color: white; }
-        .student-name { color: #e67e22; font-size: 1.6em; font-weight: bold; margin: 10px 0; padding: 10px; background: #fff8f0; border-radius: 10px; border: 1px solid #ffe0b2; }
-        .avg-row { background: #fff3cd; font-weight: bold; }
-        .admin-panel { margin-top: 30px; padding: 15px; border: 2px dashed #ccc; border-radius: 15px; background: #fdfdfd; }
-        #updateStatus { margin: 10px 0; font-weight: bold; padding: 8px; border-radius: 5px; }
-        .error-msg { color: var(--error); padding: 15px; background: #fdedec; border-radius: 10px; margin-top: 10px; border: 1px solid #f5c6cb; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
+        .container { background: white; max-width: 700px; margin: auto; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        input, button { padding: 12px; margin: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+        button { background: #2980b9; color: white; cursor: pointer; width: 200px; }
+        .result-box { margin-top: 20px; text-align: right; border-top: 2px solid #2980b9; padding-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #2c3e50; color: white; }
+        .student-header { background: #fff3cd; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 1.2em; color: #d35400; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="header">
-        <h2>نتائج المرحلة الأولى - اللغة العربية</h2>
-        <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
+<div class="container">
+    <h2>نتائج التلاميذ - مدرسة طه حسين</h2>
+    <p>الأستاذ: عبد اللطيف بلكاني</p>
+
+    <div style="background: #e8f4f8; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+        <label>خطوة 1: ارفع ملف الإكسيل أولاً</label><br>
+        <input type="file" id="fileInput" accept=".xlsx, .xls">
     </div>
 
-    <input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (مثلاً: G123456789)">
-    <button onclick="displayResult()">🔎 عرض كشف النقط</button>
-
-    <div id="output"></div>
-
-    <div class="admin-panel">
-        <h3 style="color: var(--error);">⚙️ لوحة التحكم (رفع الملف)</h3>
-        <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
-        <div id="updateStatus"></div>
+    <div id="searchSection">
+        <label>خطوة 2: أدخل رقم مسار</label><br>
+        <input type="text" id="studentId" placeholder="مثلاً: G123456789">
+        <button onclick="searchStudent()">عرض النتيجة</button>
     </div>
+
+    <div id="displayArea" class="result-box"></div>
 </div>
 
 <script>
-    // تخزين البيانات في مكان آمن
-    var MAIN_DATA = {};
+    // مصفوفة أسماء المكونات
+    const subjects = ["التواصل الشفهي", "المعجم 1", "المعجم 2", "فهم المسموع 1", "فهم المسموع 2", "طلاقة القراءة", "فهم المقروء 1", "فهم المقروء 2", "فهم المقروء 3", "فهم المقروء 4", "الإنتاج الكتابي 1", "الإنتاج الكتابي 2", "الظواهر اللغوية 1", "الظواهر اللغوية 2", "التاريخ", "الجغرافيا", "المدنية", "الإسلامية"];
 
-    const DESC_MAP = {
-        "PO2": "التواصل الشفهي", "V1": "المعجم 1", "V2": "المعجم 2", "CO1": "فهم المسموع 1", "CO2": "فهم المسموع 2",
-        "LF2": "طلاقة القراءة", "LC1": "فهم المقروء 1", "LC2": "فهم المقروء 2", "LC3": "فهم المقروء 3", "LC4": "فهم المقروء 4",
-        "PE1": "الإنتاج الكتابي 1", "PE2": "الإنتاج الكتابي 2", "OL1": "الظواهر اللغوية 1", "OL2": "الظواهر اللغوية 2",
-        "HIST": "التاريخ", "GEO": "الجغرافية", "CIV": "التربية المدنية", "ISLAM": "التربية الإسلامية"
-    };
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
 
-    const LABELS = Object.keys(DESC_MAP);
-
-    function displayResult() {
-        var input = document.getElementById('massarID').value;
-        var id = input.trim().toUpperCase();
-        var out = document.getElementById('output');
-        
-        console.log("البحث عن:", id); // للتأكد في Console
-        
-        if (!id) {
-            out.innerHTML = '<div class="error-msg">⚠️ يرجى كتابة رقم مسار أولاً</div>';
-            return;
-        }
-
-        var student = MAIN_DATA[id];
-        
-        if (!student) {
-            out.innerHTML = '<div class="error-msg">❌ الرقم (' + id + ') غير موجود في الملف الذي تم رفعه حالياً.</div>';
-            return;
-        }
-
-        // بناء الجدول برمجياً بشكل صريح
-        var html = '<div class="student-name">' + student.name + '</div>';
-        html += '<div style="margin-bottom:10px;">القسم: <strong>' + student.classRoom + '</strong></div>';
-        
-        // جدول العربية
-        html += '<h3>📚 وحدة اللغة العربية</h3>';
-        html += '<table class="result-table"><thead><tr><th>المكون</th><th>النقطة</th></tr></thead><tbody>';
-        for (var i = 0; i < 14; i++) {
-            html += '<tr><td>' + DESC_MAP[LABELS[i]] + '</td><td>' + (student.grades[i] || 0) + '</td></tr>';
-        }
-        html += '<tr class="avg-row"><td>معدل اللغة العربية</td><td>' + student.avg + '</td></tr></tbody></table>';
-
-        // جدول الاجتماعيات
-        var s1 = parseFloat(student.grades[14]) || 0;
-        var s2 = parseFloat(student.grades[15]) || 0;
-        var s3 = parseFloat(student.grades[16]) || 0;
-        var socAvg = ((s1 + s2 + s3) / 3).toFixed(2);
-        
-        html += '<h3>🌍 وحدة الاجتماعيات</h3>';
-        html += '<table class="result-table"><tr><td>التاريخ</td><td>'+s1+'</td></tr><tr><td>الجغرافيا</td><td>'+s2+'</td></tr><tr><td>المدنية</td><td>'+s3+'</td></tr><tr class="avg-row"><td>المعدل</td><td>'+socAvg+'</td></tr></table>';
-
-        // التربية الإسلامية
-        html += '<h3>🕌 التربية الإسلامية</h3>';
-        html += '<table class="result-table"><tr><td>النقطة</td><td>' + (student.grades[17] || 0) + '</td></tr></table>';
-
-        out.innerHTML = html;
-        console.log("تم عرض النتائج بنجاح!");
-    }
-
-    function handleFileUpload(event) {
-        var file = event.target.files[0];
-        var status = document.getElementById('updateStatus');
-        if (!file) return;
-
-        status.innerHTML = "⏳ جاري المعالجة...";
-        status.style.color = "blue";
-
-        var reader = new FileReader();
         reader.onload = function(e) {
             try {
-                var data = new Uint8Array(e.target.result);
-                var workbook = XLSX.read(data, {type: 'array'});
-                var sheetName = workbook.SheetNames[0];
-                var sheet = workbook.Sheets[sheetName];
-                var json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
 
-                MAIN_DATA = {}; // تصفير القاعدة
-
-                for (var i = 1; i < json.length; i++) {
-                    var row = json[i];
-                    if (!row || !row[0]) continue;
-
-                    // تنظيف مفتاح البحث (رقم مسار) من أي مسافات مخفية تماماً
-                    var cleanID = String(row[0]).replace(/\s+/g, '').toUpperCase();
-                    
-                    var g = [];
-                    for (var j = 3; j < 21; j++) {
-                        var val = parseFloat(row[j]);
-                        g.push(isNaN(val) ? 0 : val);
+                let db = {};
+                for (let i = 1; i < rows.length; i++) {
+                    let row = rows[i];
+                    if (row[0]) {
+                        let id = String(row[0]).trim().toUpperCase();
+                        db[id] = {
+                            name: row[1],
+                            class: row[2],
+                            marks: row.slice(3, 21) // يأخذ من العمود 4 إلى 21
+                        };
                     }
-
-                    // حساب المعدل
-                    var sum = 0;
-                    for(var k=0; k<14; k++) sum += g[k];
-                    var average = (sum / 14).toFixed(2);
-
-                    MAIN_DATA[cleanID] = {
-                        name: row[1] || "بدون اسم",
-                        classRoom: row[2] || "غير محدد",
-                        grades: g,
-                        avg: average
-                    };
                 }
-
-                var count = Object.keys(MAIN_DATA).length;
-                status.innerHTML = "✅ تم التحميل! " + count + " تلميذ جاهزون للعرض.";
-                status.style.color = "green";
-                console.log("تم تحميل البيانات:", MAIN_DATA);
-
+                
+                localStorage.setItem('schoolData', JSON.stringify(db));
+                alert("تم بنجاح! تم التعرف على " + Object.keys(db).length + " تلميذ.");
             } catch (err) {
-                status.innerHTML = "❌ خطأ في قراءة الملف: " + err.message;
-                status.style.color = "red";
+                alert("خطأ في قراءة الملف: " + err.message);
             }
         };
         reader.readAsArrayBuffer(file);
+    });
+
+    function searchStudent() {
+        const id = document.getElementById('studentId').value.trim().toUpperCase();
+        const display = document.getElementById('displayArea');
+        const rawData = localStorage.getItem('schoolData');
+
+        if (!rawData) {
+            alert("يرجى رفع ملف الإكسيل أولاً!");
+            return;
+        }
+
+        const db = JSON.parse(rawData);
+        const s = db[id];
+
+        if (!s) {
+            display.innerHTML = "<p style='color:red'>❌ لم يتم العثور على الرقم " + id + " في الملف.</p>";
+            return;
+        }
+
+        let tableHtml = `<div class="student-header">التلميذ(ة): ${s.name} | القسم: ${s.class}</div>`;
+        tableHtml += `<table><tr><th>المادة/المكون</th><th>النقطة</th></tr>`;
+        
+        subjects.forEach((subj, index) => {
+            tableHtml += `<tr><td>${subj}</td><td>${s.marks[index] || 0}</td></tr>`;
+        });
+
+        tableHtml += `</table>`;
+        display.innerHTML = tableHtml;
     }
 </script>
+
 </body>
 </html>
