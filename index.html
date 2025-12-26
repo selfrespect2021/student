@@ -22,9 +22,10 @@
         .footer { margin-top: 30px; font-size: 0.8em; color: #888; border-top: 1px solid #eee; padding-top: 15px; }
         .class-badge { display: inline-block; background: #3498db; color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; margin: 5px 0; }
         h3 { color: var(--primary); margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
-        .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; }
+        .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; display: none; }
         .admin-panel button { background: #e74c3c; margin-bottom: 10px; }
         .admin-panel button:hover { background: #c0392b; }
+        .admin-toggle { text-align: center; margin-top: 20px; font-size: 0.7em; color: #bbb; cursor: pointer; user-select: none; }
         #updateStatus { margin-top: 10px; font-size: 0.9em; padding: 10px; border-radius: 8px; }
         .info-box { background: #fff3cd; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: right; font-size: 0.85em; line-height: 1.6; }
     </style>
@@ -42,7 +43,9 @@
 
     <div id="output"></div>
 
-    <div class="admin-panel">
+    <div class="admin-toggle" onclick="toggleAdmin()" title="انقر 5 مرات للوصول">.</div>
+
+    <div class="admin-panel" id="adminPanel">
         <h3 style="color: #e74c3c;">⚙️ لوحة التحكم - تحديث النقط</h3>
         <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
         <button onclick="document.getElementById('excelFile').click()">
@@ -202,6 +205,29 @@
         h += '</div>';
 
         out.innerHTML = h;
+    }
+
+    let clickCount = 0;
+    let clickTimer = null;
+
+    function toggleAdmin() {
+        clickCount++;
+        
+        if (clickTimer) clearTimeout(clickTimer);
+        
+        clickTimer = setTimeout(() => {
+            clickCount = 0;
+        }, 2000);
+        
+        if (clickCount >= 5) {
+            const panel = document.getElementById('adminPanel');
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+            clickCount = 0;
+        }
     }
 
     async function handleFileUpload(event) {
