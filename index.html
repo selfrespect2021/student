@@ -67,7 +67,8 @@
 
     <div class="footer">
         هذا النظام مخصص لتلاميذ الأستاذ بلكاني بمدرسة طه حسين<br>
-        الموسم الدراسي 2025/2026
+        الموسم الدراسي 2025/2026<br>
+        <span style="font-size: 0.7em; color: #ddd; cursor: pointer;" onclick="testAdmin()">v1.0</span>
     </div>
 </div>
 
@@ -215,9 +216,20 @@
         const adminPanel = document.getElementById('adminPanel');
         if (urlParams.get('admin') === 'true') {
             adminPanel.style.display = 'block';
-            console.log('Admin panel activated');
+            console.log('✅ Admin panel activated');
         } else {
-            console.log('Admin parameter not found. Use ?admin=true in URL');
+            console.log('ℹ️ Admin parameter not found. Use ?admin=true in URL');
+        }
+    }
+
+    function testAdmin() {
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel.style.display === 'block') {
+            adminPanel.style.display = 'none';
+            alert('تم إخفاء لوحة التحكم');
+        } else {
+            adminPanel.style.display = 'block';
+            alert('تم تفعيل لوحة التحكم!');
         }
     }
 
