@@ -212,8 +212,12 @@
 
     function checkAdminAccess() {
         const urlParams = new URLSearchParams(window.location.search);
+        const adminPanel = document.getElementById('adminPanel');
         if (urlParams.get('admin') === 'true') {
-            document.getElementById('adminPanel').style.display = 'block';
+            adminPanel.style.display = 'block';
+            console.log('Admin panel activated');
+        } else {
+            console.log('Admin parameter not found. Use ?admin=true in URL');
         }
     }
 
