@@ -11,18 +11,16 @@
         .card { background: white; max-width: 800px; margin: 20px auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
         .header { border-bottom: 3px solid var(--accent); margin-bottom: 20px; padding-bottom: 10px; }
         input[type="text"] { padding: 15px; width: 85%; border: 2px solid #ddd; border-radius: 12px; font-size: 1.2em; text-align: center; margin-bottom: 15px; outline: none; }
-        input[type="text"]:focus { border-color: var(--accent); }
-        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 90%; font-size: 1.1em; transition: 0.3s; margin: 5px 0; }
-        button:hover { background: #1f5f8b; transform: translateY(-2px); }
+        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 90%; font-size: 1.1em; transition: 0.3s; }
+        button:hover { background: #1f5f8b; }
         .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
         .result-table th, .result-table td { border: 1px solid #eee; padding: 10px; text-align: center; }
-        .result-table th { background: var(--primary); color: white; }
-        .student-name { color: #e67e22; font-size: 1.8em; font-weight: bold; margin: 15px 0; }
-        .avg-row { background: #fff3cd; font-weight: bold; font-size: 1.2em; }
-        .info-panel { background: #e8f4f8; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: right; line-height: 1.6; }
-        .error-msg { color: var(--error); padding: 20px; background: #fdedec; border-radius: 10px; margin-top: 20px; font-weight: bold; }
+        .result-table th { background: var(--primary); color: white; font-size: 0.9em; }
+        .student-name { color: #e67e22; font-size: 1.7em; font-weight: bold; margin: 15px 0; padding: 10px; background: #fff8f0; border-radius: 10px; }
+        .avg-row { background: #fff3cd; font-weight: bold; font-size: 1.1em; }
         .admin-panel { margin-top: 30px; padding: 20px; border: 2px dashed #ccc; border-radius: 15px; background: #fafafa; }
-        #updateStatus { margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 0.9em; }
+        #updateStatus { margin-top: 10px; font-weight: bold; font-size: 0.9em; }
+        .error-msg { color: var(--error); padding: 15px; background: #fdedec; border-radius: 10px; margin-top: 15px; border: 1px solid #f5c6cb; }
     </style>
 </head>
 <body>
@@ -33,7 +31,7 @@
         <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
     </div>
 
-    <input type="text" id="massarID" placeholder="أدخل رقم مسار (مثال: G123456789)">
+    <input type="text" id="massarID" placeholder="أدخل رقم مسار (G...)">
     <button onclick="displayResult()">عرض كشف النقط التفصيلي</button>
 
     <div id="output"></div>
@@ -49,6 +47,9 @@
 </div>
 
 <script>
+    // استخدام كائن عالمي لتخزين البيانات
+    window.localDB = {};
+
     const labels = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2", "HIST", "GEO", "CIV", "ISLAM"];
     const desc = {
         "PO2": "التواصل الشفهي", "V1": "المعجم 1", "V2": "المعجم 2", "CO1": "فهم المسموع 1", "CO2": "فهم المسموع 2",
@@ -57,11 +58,10 @@
         "HIST": "التاريخ", "GEO": "الجغرافية", "CIV": "التربية المدنية", "ISLAM": "التربية الإسلامية"
     };
 
-    // قاعدة بيانات تجريبية (سيتم تحديثها عند رفع الملف)
-    let DB = {};
-
     function displayResult() {
-        const id = document.getElementById('massarID').value.trim().toUpperCase();
+        const inputVal = document.getElementById('massarID').value;
+        // تنظيف المدخلات من الفراغات وتحويلها لحروف كبيرة
+        const id = inputVal.trim().toUpperCase();
         const out = document.getElementById('output');
         
         if (!id) {
@@ -69,35 +69,28 @@
             return;
         }
 
-        const s = DB[id];
+        const s = window.localDB[id];
+        
         if (!s) {
-            out.innerHTML = `<div class="error-msg">❌ الرقم ${id} غير مسجل. تأكد من رفع ملف الإكسيل أولاً أو صحة الرقم.</div>`;
+            out.innerHTML = `<div class="error-msg">❌ الرقم <strong>${id}</strong> غير مسجل.<br>تأكد من الرقم أو حاول إعادة رفع الملف.</div>`;
             return;
         }
 
+        // بناء العرض
         let h = `<div class="student-name">${s.n}</div>`;
-        h += `<div style="margin-bottom:10px;">القسم: <strong>${s.c}</strong></div>`;
+        h += `<div style="margin-bottom:15px;">القسم: <strong>${s.c}</strong></div>`;
         
-        // جدول اللغة العربية
-        h += '<h3>📚 وحدة اللغة العربية</h3>';
-        h += '<table class="result-table"><tr><th>المكون</th><th>النقطة</th></tr>';
+        h += '<h3>📚 اللغة العربية</h3><table class="result-table"><tr><th>المكون</th><th>النقطة</th></tr>';
         for (let i = 0; i < 14; i++) {
             h += `<tr><td>${desc[labels[i]]}</td><td>${s.g[i] || 0}</td></tr>`;
         }
-        h += `<tr class="avg-row"><td>المعدل المحسوب</td><td>${s.a}</td></tr></table>`;
+        h += `<tr class="avg-row"><td>المعدل</td><td>${s.a}</td></tr></table>`;
 
-        // جدول الاجتماعيات
+        // إضافة المواد الأخرى
         const socAvg = (( (s.g[14]||0) + (s.g[15]||0) + (s.g[16]||0) ) / 3).toFixed(2);
-        h += '<h3>🌍 وحدة الاجتماعيات</h3>';
-        h += '<table class="result-table"><tr><th>المكون</th><th>النقطة</th></tr>';
-        h += `<tr><td>التاريخ</td><td>${s.g[14] || 0}</td></tr>`;
-        h += `<tr><td>الجغرافية</td><td>${s.g[15] || 0}</td></tr>`;
-        h += `<tr><td>التربية المدنية</td><td>${s.g[16] || 0}</td></tr>`;
-        h += `<tr class="avg-row"><td>معدل الوحدة</td><td>${socAvg}</td></tr></table>`;
-
-        // التربية الإسلامية
-        h += '<h3>🕌 وحدة التربية الإسلامية</h3>';
-        h += `<table class="result-table"><tr><td>التربية الإسلامية</td><td>${s.g[17] || 0}</td></tr></table>`;
+        h += '<h3>🌍 الاجتماعيات</h3><table class="result-table"><tr><td>التاريخ</td><td>${s.g[14]||0}</td></tr><tr><td>الجغرافيا</td><td>${s.g[15]||0}</td></tr><tr><td>المدنية</td><td>${s.g[16]||0}</td></tr><tr class="avg-row"><td>المعدل</td><td>${socAvg}</td></tr></table>';
+        
+        h += '<h3>🕌 التربية الإسلامية</h3><table class="result-table"><tr><td>النقطة</td><td>${s.g[17]||0}</td></tr></table>';
 
         out.innerHTML = h;
     }
@@ -107,49 +100,45 @@
         const status = document.getElementById('updateStatus');
         if (!file) return;
 
-        status.innerHTML = '<span style="color:blue">⏳ جاري معالجة الملف...</span>';
-
+        status.innerHTML = "⏳ جاري المعالجة...";
+        
         try {
             const data = await file.arrayBuffer();
             const workbook = XLSX.read(data, { type: 'array' });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-            if (jsonData.length < 2) throw new Error("الملف فارغ");
+            // إعادة تعيين القاعدة عند كل رفع جديد
+            window.localDB = {};
 
-            // تفريغ قاعدة البيانات القديمة لبدء تحديث نظيف
-            DB = {}; 
-
-            for (let i = 1; i < jsonData.length; i++) {
-                const row = jsonData[i];
+            for (let i = 1; i < json.length; i++) {
+                const row = json[i];
                 if (!row[0]) continue;
 
-                const massarID = String(row[0]).trim().toUpperCase();
+                // تنظيف مفتاح البحث (رقم مسار) من أي فراغات مخفية
+                const massar = String(row[0]).replace(/\s/g, '').toUpperCase();
+                
                 const grades = [];
-                // استخراج 18 نقطة من العمود 4 إلى 21 (Index 3 to 20)
                 for (let j = 3; j < 21; j++) {
                     grades.push(parseFloat(row[j]) || 0);
                 }
 
-                const arabicSum = grades.slice(0, 14).reduce((a, b) => a + b, 0);
-                const arabicAvg = (arabicSum / 14).toFixed(2);
+                const arabicAvg = (grades.slice(0, 14).reduce((a, b) => a + b, 0) / 14).toFixed(2);
 
-                DB[massarID] = {
+                window.localDB[massar] = {
                     n: row[1], // الاسم
                     c: row[2], // القسم
-                    g: grades, // المصفوفة
+                    g: grades, // النقط
                     a: arabicAvg // المعدل
                 };
             }
 
-            status.innerHTML = `<span style="color:green">✅ تم بنجاح! تم تحميل ${Object.keys(DB).length} تلميذ.</span>`;
-            
-            // تحديث العرض إذا كان هناك رقم مكتوب في الخانة
-            if(document.getElementById('massarID').value) displayResult();
+            const count = Object.keys(window.localDB).length;
+            status.innerHTML = `<span style="color:green">✅ تم بنجاح! تم تحميل ${count} تلميذ.</span>`;
+            event.target.value = ''; // للسماح برفع نفس الملف مجدداً
 
-        } catch (error) {
-            console.error(error);
-            status.innerHTML = '<span style="color:red">❌ فشل الرفع. تأكد من ترتيب الأعمدة في ملف Excel.</span>';
+        } catch (e) {
+            status.innerHTML = `<span style="color:red">❌ فشل الرفع: ${e.message}</span>`;
         }
     }
 </script>
