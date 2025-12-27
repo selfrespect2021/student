@@ -26,7 +26,11 @@
         .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; }
         .admin-panel.hidden { display: none !important; }
         .admin-panel button { background: #e74c3c; margin-bottom: 10px; }
+        .admin-panel button:hover { background: #c0392b; }
         .download-btn { background: #27ae60 !important; }
+        .download-btn:hover { background: #229954 !important; }
+        #updateStatus { margin-top: 10px; font-size: 0.9em; padding: 10px; border-radius: 8px; }
+        .info-box { background: #fff3cd; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: right; font-size: 0.85em; line-height: 1.6; }
         .admin-trigger { font-size: 0.6em; color: #ddd; cursor: pointer; user-select: none; }
     </style>
 </head>
@@ -38,21 +42,83 @@
         <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
     </div>
 
-    <input type="text" id="massarID" placeholder="أدخل رقم مسار (G...)" onkeypress="if(event.key==='Enter') displayResult()">
+    <input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (G...)" onkeypress="if(event.key==='Enter') displayResult()">
     <button onclick="displayResult()">عرض كشف النقط التفصيلي</button>
 
     <div id="output" style="margin-top: 20px;"></div>
 
     <div class="admin-panel hidden" id="adminPanel">
-        <h3 style="color: #e74c3c;">⚙️ لوحة التحكم</h3>
-        <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
-        <p id="updateStatus"></p>
-        <button class="download-btn" onclick="downloadUpdatedCode()">💾 حفظ البيانات نهائياً في الكود</button>
+        <h3 style="color: #e74c3c;">⚙️ لوحة التحكم - تحديث النقط</h3>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
+        <button onclick="document.getElementById('excelFile').click()">
+            📤 رفع ملف Excel لتحديث النقط
+        </button>
+        <button class="download-btn" onclick="downloadUpdatedCode()">
+            💾 تنزيل الكود المحدث (للنشر)
+        </button>
+        <button onclick="showSMSPanel()" style="background: #9b59b6 !important; margin-top: 10px;">
+            📱 إرسال رسائل SMS
+        </button>
+        <button onclick="clearStoredData()" style="background: #e67e22 !important; margin-top: 10px;">
+            🔄 إعادة تحميل الصفحة
+        </button>
+        <div id="updateStatus"></div>
+        
+        <div id="smsPanel" style="display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px; text-align: right;">
+            <h4 style="color: #9b59b6; margin-top: 0;">📱 إرسال رسائل SMS للتلاميذ</h4>
+            
+            <div style="margin-bottom: 15px;">
+                <label><strong>اختر التلاميذ:</strong></label><br>
+                <select id="smsTarget" style="width: 100%; padding: 10px; border-radius: 8px; margin-top: 5px;">
+                    <option value="all">جميع التلاميذ</option>
+                    <option value="class1">قسم 6APG-1 فقط</option>
+                    <option value="class2">قسم 6APG-2 فقط</option>
+                    <option value="custom">تلميذ محدد</option>
+                </select>
+            </div>
+            
+            <div id="customStudentDiv" style="display: none; margin-bottom: 15px;">
+                <label><strong>رقم مسار التلميذ:</strong></label><br>
+                <input type="text" id="customMassar" placeholder="مثال: G200064286" style="width: 95%; padding: 10px; border-radius: 8px; margin-top: 5px;">
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label><strong>نص الرسالة:</strong></label><br>
+                <textarea id="smsMessage" rows="5" style="width: 95%; padding: 10px; border-radius: 8px; margin-top: 5px;" placeholder="اكتب رسالتك هنا...&#10;&#10;يمكنك استخدام:&#10;{name} - اسم التلميذ&#10;{average} - المعدل&#10;{class} - القسم"></textarea>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="includeLink">
+                    <span>إرفاق رابط الموقع في الرسالة</span>
+                </label>
+            </div>
+            
+            <button onclick="sendSMS()" style="background: #27ae60 !important; width: 100%;">
+                ✉️ إرسال الرسائل
+            </button>
+            <button onclick="document.getElementById('smsPanel').style.display='none'" style="background: #95a5a6 !important; width: 100%; margin-top: 10px;">
+                إلغاء
+            </button>
+            
+            <div id="smsStatus" style="margin-top: 15px;"></div>
+        </div>
+        
+        <div class="info-box">
+            <strong>📋 تنسيق الملف المطلوب:</strong><br>
+            • العمود 1: رقم مسار (G...)<br>
+            • العمود 2: الاسم الكامل<br>
+            • العمود 3: القسم<br>
+            • الأعمدة 4-21: النقط (PO2, V1, V2, CO1, CO2, LF2, LC1, LC2, LC3, LC4, PE1, PE2, OL1, OL2, HIST, GEO, CIV, ISLAM)<br>
+            • العمود 22 (اختياري): رقم الهاتف للرسائل SMS<br><br>
+            <strong>💡 مهم:</strong> بعد رفع Excel، اضغط "تنزيل الكود المحدث" ثم ارفعه على GitHub لتحديث الموقع!
+        </div>
     </div>
 
     <div class="footer">
+        هذا النظام مخصص لتلاميذ الأستاذ بلكاني بمدرسة طه حسين<br>
         الموسم الدراسي 2025/2026<br>
-        <span class="admin-trigger" onclick="toggleAdmin()">الإدارة</span>
+        <span class="admin-trigger" onclick="toggleAdmin()">v1.0</span>
     </div>
 </div>
 
@@ -65,10 +131,12 @@
         "HIST": "التاريخ", "GEO": "الجغرافية", "CIV": "التربية المدنية", "ISLAM": "التربية الإسلامية"
     };
 
-    // قاعدة البيانات
     let DB = {
-        "G183107408": { n: "الدرقاوي عز العرب", c: "6APG-1", g: [2,0,0,0,2,4,2.5,6,0,0,4.5,1,3,0.25,0,2,2,7.5], a: "1.80" },
-        "G202028861": { n: "محراش صهيب", c: "6APG-2", g: [7,7.5,5,10,10,10,7,7,10,10,9,10,8.25,8,10,10,10,6.5], a: "8.48" }
+        "G176042802": { n: "نعناع خديجة", c: "6APG-1", g: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], a: "0.00", phone: "" },
+        "G183107408": { n: "الدرقاوي عز العرب", c: "6APG-1", g: [2,0,0,0,2,4,2.5,6,0,0,4.5,1,3,0.25,0,2,2,7.5], a: "1.80", phone: "" },
+        "G200064286": { n: "بن المقدم آية", c: "6APG-1", g: [5,5,10,10,5,6,7,10,10,10,9,7.5,8.25,10,6,8,10,9.5], a: "8.05", phone: "" },
+        "G202028870": { n: "القدوري مريم", c: "6APG-1", g: [7,5,10,9,8,10,10,10,10,4,9,7,7,6,10,10,10,9.5], a: "8.00", phone: "" },
+        "G203028888": { n: "عفوالله امينة", c: "6APG-2", g: [8,7.5,10,10,7,10,10,10,10,10,9.5,9,10,6,10,10,10,10], a: "9.07", phone: "" }
     };
 
     function displayResult() {
@@ -77,70 +145,247 @@
         const out = document.getElementById('output');
         
         if (!s) {
-            out.innerHTML = "<p style='color:red;'>❌ لم يتم العثور على هذا الرمز.</p>";
+            out.innerHTML = "<p style='color:red; margin-top:20px; font-weight:bold;'>❌ عذراً، الرمز غير موجود. تأكد من إدخال رقم مسار الصحيح.</p>";
             return;
         }
         
-        let h = `<div class="student-name">${s.n}</div>`;
-        h += `<div class="class-badge">القسم: ${s.c}</div>`;
+        let h = '<div class="student-name">' + s.n + '</div>';
+        h += '<div class="class-badge">القسم: ' + s.c + '</div>';
         
-        // 1. جدول اللغة العربية
-        h += '<h3>📚 مادة اللغة العربية</h3><table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        for (let i = 0; i < 14; i++) {
-            h += `<tr><td>${labels[i]}</td><td>${desc[labels[i]]}</td><td>${s.g[i] || 0}</td></tr>`;
+        h += '<h3>📚 وحدة اللغة العربية</h3>';
+        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
+        const arabicLabels = ["PO2", "V1", "V2", "CO1", "CO2", "LF2", "LC1", "LC2", "LC3", "LC4", "PE1", "PE2", "OL1", "OL2"];
+        for (let i = 0; i < arabicLabels.length; i++) {
+            const l = arabicLabels[i];
+            const idx = labels.indexOf(l);
+            h += '<tr><td>' + l + '</td><td>' + desc[l] + '</td><td>' + s.g[idx] + '</td></tr>';
         }
-        h += `<tr class="avg-row"><td colspan="2">المعدل</td><td>${s.a}</td></tr></table>`;
+        h += '<tr class="avg-row"><td colspan="2">معدل مادة اللغة العربية</td><td>' + s.a + '</td></tr></table>';
         
-        // 2. جدول الاجتماعيات
-        const hist = s.g[14] || 0;
-        const geo = s.g[15] || 0;
-        const civ = s.g[16] || 0;
-        const socAvg = ((hist + geo + civ) / 3).toFixed(2);
-        h += '<h3>🌍 مادة الاجتماعيات</h3><table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        h += `<tr><td>HIST</td><td>تاريخ</td><td>${hist}</td></tr><tr><td>GEO</td><td>جغرافيا</td><td>${geo}</td></tr><tr><td>CIV</td><td>مدنية</td><td>${civ}</td></tr>`;
-        h += `<tr class="avg-row"><td colspan="2">المعدل</td><td>${socAvg}</td></tr></table>`;
+        const socAvg = ((s.g[14] + s.g[15] + s.g[16]) / 3).toFixed(2);
+        h += '<h3>🌍 وحدة الاجتماعيات</h3>';
+        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
+        h += '<tr><td>HIST</td><td>' + desc["HIST"] + '</td><td>' + s.g[14] + '</td></tr>';
+        h += '<tr><td>GEO</td><td>' + desc["GEO"] + '</td><td>' + s.g[15] + '</td></tr>';
+        h += '<tr><td>CIV</td><td>' + desc["CIV"] + '</td><td>' + s.g[16] + '</td></tr>';
+        h += '<tr class="avg-row"><td colspan="2">معدل الاجتماعيات</td><td>' + socAvg + '</td></tr></table>';
         
-        // 3. التربية الإسلامية
-        const isl = s.g[17] || 0;
-        h += '<h3>🕌 التربية الإسلامية</h3><table class="result-table"><tr><th>المكون</th><th>النقطة</th></tr>';
-        h += `<tr><td>التربية الإسلامية</td><td>${isl}</td></tr></table>`;
+        h += '<h3>🕌 وحدة التربية الإسلامية</h3>';
+        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
+        h += '<tr><td>ISLAM</td><td>' + desc["ISLAM"] + '</td><td>' + s.g[17] + '</td></tr>';
+        h += '<tr class="avg-row"><td colspan="2">معدل التربية الإسلامية</td><td>' + s.g[17].toFixed(2) + '</td></tr></table>';
+
+        h += '<div class="info-panel"><strong>💡 ملاحظة توجيهية:</strong><br>';
+        if (parseFloat(s.a) >= 8) {
+            h += 'أداء متميز جداً! استمر في هذا المسار وتوسع في القراءة الحرة لتنمية رصيدك المعرفي.';
+        } else if (parseFloat(s.a) >= 5) {
+            h += 'نتيجتك متوسطة ومطمئنة، لكن هناك مجال كبير للتحسن، خاصة في مكونات الإنتاج الكتابي والظواهر اللغوية.';
+        } else {
+            h += 'هذه النتيجة تشير إلى وجود صعوبات في بعض التعلمات الأساسية. ننصح بالتركيز أكثر على قواعد اللغة والتدرب على القراءة اليومية.';
+        }
+        h += '</div>';
+
+        h += '<div class="tips-panel"><strong>📌 نصائح الأستاذ بلكاني للمرحلة المقبلة:</strong><br>';
+        h += '• المراجعة الدائمة للظواهر اللغوية (صرف، تحويل، إملاء).<br>';
+        h += '• قراءة قصص قصيرة باللغة العربية لتقوية "فهم المقروء".<br>';
+        h += '• الاهتمام بجودة الخط وتنظيم ورقة التحرير.</div>';
 
         out.innerHTML = h;
     }
 
-    function toggleAdmin() { document.getElementById('adminPanel').classList.toggle('hidden'); }
+    function toggleAdmin() {
+        const panel = document.getElementById('adminPanel');
+        panel.classList.toggle('hidden');
+    }
+
+    function checkAdminAccess() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('admin') === 'true') {
+            document.getElementById('adminPanel').classList.remove('hidden');
+        }
+    }
+
+    window.onload = checkAdminAccess;
 
     async function handleFileUpload(event) {
         const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+        const status = document.getElementById('updateStatus');
+        
+        if (!file) {
+            status.style.background = '#ffebee';
+            status.innerHTML = '<span style="color: red;">❌ لم يتم اختيار أي ملف</span>';
+            return;
+        }
+
+        status.style.background = '#e3f2fd';
+        status.innerHTML = '<span style="color: blue;">⏳ جاري معالجة الملف...</span>';
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
             
-            for(let i=1; i<json.length; i++){
-                const r = json[i];
-                if(!r[0]) continue;
-                const grades = [];
-                for(let j=3; j<21; j++) grades.push(parseFloat(r[j]) || 0);
-                const avg = (grades.slice(0,14).reduce((a,b)=>a+b,0)/14).toFixed(2);
-                DB[String(r[0]).trim().toUpperCase()] = { n: r[1], c: r[2], g: grades, a: avg };
+            if (jsonData.length < 2) {
+                status.style.background = '#ffebee';
+                status.innerHTML = '<span style="color: red;">❌ الملف فارغ أو لا يحتوي على بيانات كافية</span>';
+                return;
             }
-            alert('تم التحديث بنجاح! جرب البحث الآن.');
-        };
-        reader.readAsArrayBuffer(file);
+
+            let updatedCount = 0, newCount = 0;
+            
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row[0]) continue;
+                
+                const massarID = String(row[0]).trim().toUpperCase();
+                const name = row[1] || '';
+                const classRoom = row[2] || '';
+                const phone = row[21] ? String(row[21]).trim() : '';
+                const grades = [];
+                
+                for (let j = 3; j < 21 && j < row.length; j++) {
+                    grades.push(parseFloat(row[j]) || 0);
+                }
+                
+                const arabicGrades = grades.slice(0, 14).filter(g => g > 0);
+                const average = arabicGrades.length > 0 
+                    ? (arabicGrades.reduce((a, b) => a + b, 0) / arabicGrades.length).toFixed(2)
+                    : "0.00";
+                
+                if (DB[massarID]) updatedCount++;
+                else newCount++;
+                
+                DB[massarID] = { n: name, c: classRoom, g: grades, a: average, phone: phone };
+            }
+            
+            status.style.background = '#e8f5e9';
+            status.innerHTML = `<span style="color: green;"><strong>✅ تم التحديث بنجاح!</strong><br>
+                📝 تم تحديث ${updatedCount} تلميذ(ة)<br>
+                ➕ تمت إضافة ${newCount} تلميذ(ة) جديد(ة)<br>
+                📊 إجمالي التلاميذ: ${Object.keys(DB).length}<br><br>
+                <strong>⚠️ مهم:</strong> اضغط على "تنزيل الكود المحدث" ثم ارفعه على GitHub!</span>`;
+            
+            event.target.value = '';
+        } catch (error) {
+            status.style.background = '#ffebee';
+            status.innerHTML = '<span style="color: red;">❌ حدث خطأ في معالجة الملف. تأكد من أن الملف بصيغة Excel صحيحة.</span>';
+        }
     }
 
     function downloadUpdatedCode() {
-        const scriptContent = `let DB = ${JSON.stringify(DB, null, 4)};`;
-        const currentHtml = document.documentElement.outerHTML.replace(/let DB = \{[\s\S]*?\};/, scriptContent);
-        const blob = new Blob([currentHtml], {type: 'text/html'});
+        let dbString = '{\n';
+        const entries = Object.entries(DB);
+        entries.forEach(([key, value], index) => {
+            const isLast = index === entries.length - 1;
+            dbString += `        "${key}": { n: "${value.n}", c: "${value.c}", g: [${value.g.join(',')}], a: "${value.a}", phone: "${value.phone || ''}" }${isLast ? '' : ','}\n`;
+        });
+        dbString += '    }';
+
+        const htmlContent = document.documentElement.outerHTML.replace(
+            /let DB = \{[\s\S]*?\};/,
+            `let DB = ${dbString};`
+        );
+
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'results.html';
+        a.href = url;
+        a.download = 'index.html';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        const status = document.getElementById('updateStatus');
+        status.style.background = '#e8f5e9';
+        status.innerHTML = '<span style="color: green;">✅ تم تنزيل index.html المحدث!<br>📤 ارفعه الآن على GitHub لتحديث الموقع.</span>';
+    }
+
+    function showSMSPanel() {
+        document.getElementById('smsPanel').style.display = 'block';
+        document.getElementById('smsTarget').onchange = function() {
+            document.getElementById('customStudentDiv').style.display = 
+                this.value === 'custom' ? 'block' : 'none';
+        };
+    }
+
+    function sendSMS() {
+        const target = document.getElementById('smsTarget').value;
+        const message = document.getElementById('smsMessage').value.trim();
+        const includeLink = document.getElementById('includeLink').checked;
+        const status = document.getElementById('smsStatus');
+        
+        if (!message) {
+            status.style.background = '#ffebee';
+            status.innerHTML = '<span style="color: red;">❌ الرجاء كتابة نص الرسالة</span>';
+            return;
+        }
+        
+        let recipients = [];
+        
+        if (target === 'all') {
+            recipients = Object.entries(DB).filter(([k, v]) => v.phone);
+        } else if (target === 'class1') {
+            recipients = Object.entries(DB).filter(([k, v]) => v.c === '6APG-1' && v.phone);
+        } else if (target === 'class2') {
+            recipients = Object.entries(DB).filter(([k, v]) => v.c === '6APG-2' && v.phone);
+        } else if (target === 'custom') {
+            const massar = document.getElementById('customMassar').value.trim().toUpperCase();
+            if (DB[massar] && DB[massar].phone) {
+                recipients = [[massar, DB[massar]]];
+            } else {
+                status.style.background = '#ffebee';
+                status.innerHTML = '<span style="color: red;">❌ رقم المسار غير موجود أو لا يحتوي على رقم هاتف</span>';
+                return;
+            }
+        }
+        
+        if (recipients.length === 0) {
+            status.style.background = '#fff3cd';
+            status.innerHTML = '<span style="color: orange;">⚠️ لا توجد أرقام هواتف للمستهدفين</span>';
+            return;
+        }
+        
+        status.style.background = '#e3f2fd';
+        status.innerHTML = `<span style="color: blue;">📱 جاري إرسال ${recipients.length} رسالة...</span>`;
+        
+        let smsDetails = '';
+        
+        recipients.forEach(([massar, student]) => {
+            let personalMsg = message
+                .replace('{name}', student.n)
+                .replace('{average}', student.a)
+                .replace('{class}', student.c);
+            
+            if (includeLink) {
+                personalMsg += '\n\nرابط النتائج: https://selfrespect2021.github.io/student/';
+            }
+            
+            const smsLink = `sms:${student.phone}?body=${encodeURIComponent(personalMsg)}`;
+            smsDetails += `<div style="margin: 5px 0; padding: 8px; background: white; border-radius: 5px; font-size: 0.85em;">
+                <strong>${student.n}</strong> (${student.phone})<br>
+                <a href="${smsLink}" target="_blank" style="color: #27ae60;">📱 فتح تطبيق الرسائل</a>
+            </div>`;
+        });
+        
+        status.style.background = '#e8f5e9';
+        status.innerHTML = `<span style="color: green;"><strong>✅ تم تجهيز ${recipients.length} رسالة</strong></span>
+            <div style="margin-top: 10px; max-height: 300px; overflow-y: auto;">
+                ${smsDetails}
+            </div>
+            <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                💡 اضغط على "فتح تطبيق الرسائل" لكل تلميذ لإرسال الرسالة
+            </p>`;
+    }
+
+    function clearStoredData() {
+        if (confirm('هل أنت متأكد من إعادة تحميل الصفحة؟')) {
+            location.reload();
+        }
     }
 </script>
+
 </body>
 </html>
