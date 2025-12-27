@@ -42,10 +42,10 @@
         <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
     </div>
 
-    <input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (G...)">
+    <input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (G...)" onkeypress="if(event.key==='Enter') displayResult()">
     <button onclick="displayResult()">عرض كشف النقط التفصيلي</button>
 
-    <div id="output"></div>
+    <div id="output" style="margin-top: 20px;"></div>
 
     <div class="admin-panel hidden" id="adminPanel">
         <h3 style="color: #e74c3c;">⚙️ لوحة التحكم - تحديث النقط</h3>
@@ -126,8 +126,11 @@
         const s = DB[id];
         const out = document.getElementById('output');
         
+        console.log('Searching for:', id);
+        console.log('Found:', s);
+        
         if (!s) {
-            out.innerHTML = "<p style='color:red; margin-top:20px;'>عذراً، الرمز غير موجود. تأكد من إدخال رقم مسار الصحيح.</p>";
+            out.innerHTML = "<p style='color:red; margin-top:20px; font-weight:bold;'>❌ عذراً، الرمز غير موجود. تأكد من إدخال رقم مسار الصحيح.</p>";
             return;
         }
         
