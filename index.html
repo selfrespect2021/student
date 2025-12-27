@@ -26,11 +26,7 @@
         .admin-panel { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; }
         .admin-panel.hidden { display: none !important; }
         .admin-panel button { background: #e74c3c; margin-bottom: 10px; }
-        .admin-panel button:hover { background: #c0392b; }
         .download-btn { background: #27ae60 !important; }
-        .download-btn:hover { background: #229954 !important; }
-        #updateStatus { margin-top: 10px; font-size: 0.9em; padding: 10px; border-radius: 8px; }
-        .info-box { background: #fff3cd; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: right; font-size: 0.85em; line-height: 1.6; }
         .admin-trigger { font-size: 0.6em; color: #ddd; cursor: pointer; user-select: none; }
     </style>
 </head>
@@ -42,36 +38,21 @@
         <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
     </div>
 
-    <input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (G...)" onkeypress="if(event.key==='Enter') displayResult()">
+    <input type="text" id="massarID" placeholder="أدخل رقم مسار (G...)" onkeypress="if(event.key==='Enter') displayResult()">
     <button onclick="displayResult()">عرض كشف النقط التفصيلي</button>
 
     <div id="output" style="margin-top: 20px;"></div>
 
     <div class="admin-panel hidden" id="adminPanel">
-        <h3 style="color: #e74c3c;">⚙️ لوحة التحكم - تحديث النقط</h3>
-        <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
-        <button onclick="document.getElementById('excelFile').click()">
-            📤 رفع ملف Excel لتحديث النقط
-        </button>
-        <button class="download-btn" onclick="downloadUpdatedCode()">
-            💾 تنزيل الكود المحدث (ملف HTML)
-        </button>
-        <button onclick="clearStoredData()" style="background: #e67e22 !important; margin-top: 10px;">
-            🗑️ مسح البيانات المحفوظة من المتصفح
-        </button>
-        <div id="updateStatus"></div>
-        
-        <div class="info-box">
-            <strong>📋 تنسيق ملف Excel المطلوب:</strong><br>
-            • العمود الأول: رقم مسار (G...) | العمود الثاني: الاسم | العمود الثالث: القسم<br>
-            • الأعمدة من 4 إلى 21: النقط (PO2 إلى ISLAM)
-        </div>
+        <h3 style="color: #e74c3c;">⚙️ لوحة التحكم</h3>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
+        <p id="updateStatus"></p>
+        <button class="download-btn" onclick="downloadUpdatedCode()">💾 حفظ البيانات نهائياً في الكود</button>
     </div>
 
     <div class="footer">
-        هذا النظام مخصص لتلاميذ الأستاذ بلكاني بمدرسة طه حسين<br>
         الموسم الدراسي 2025/2026<br>
-        <span class="admin-trigger" onclick="toggleAdmin()">v1.1</span>
+        <span class="admin-trigger" onclick="toggleAdmin()">الإدارة</span>
     </div>
 </div>
 
@@ -84,22 +65,11 @@
         "HIST": "التاريخ", "GEO": "الجغرافية", "CIV": "التربية المدنية", "ISLAM": "التربية الإسلامية"
     };
 
-    // قاعدة البيانات الافتراضية
+    // قاعدة البيانات
     let DB = {
         "G183107408": { n: "الدرقاوي عز العرب", c: "6APG-1", g: [2,0,0,0,2,4,2.5,6,0,0,4.5,1,3,0.25,0,2,2,7.5], a: "1.80" },
-        "G185079604": { n: "بوحفرة ادم", c: "6APG-1", g: [2,2.5,7.5,0,4,4,1.5,3,6,4,3.5,3,1,0,0,2.5,6,3], a: "3.00" },
         "G202028861": { n: "محراش صهيب", c: "6APG-2", g: [7,7.5,5,10,10,10,7,7,10,10,9,10,8.25,8,10,10,10,6.5], a: "8.48" }
-        // ... يمكن إضافة باقي التلاميذ هنا أو رفعهم عبر ملف Excel
     };
-
-    // تحميل البيانات من ذاكرة المتصفح عند البدء
-    function loadStoredData() {
-        const saved = localStorage.getItem('students_db');
-        if (saved) {
-            DB = JSON.parse(saved);
-            console.log('✅ تم تحميل البيانات من المتصفح');
-        }
-    }
 
     function displayResult() {
         const id = document.getElementById('massarID').value.trim().toUpperCase();
@@ -107,112 +77,70 @@
         const out = document.getElementById('output');
         
         if (!s) {
-            out.innerHTML = "<p style='color:red; margin-top:20px; font-weight:bold;'>❌ عذراً، الرمز غير موجود. تأكد من إدخال رقم مسار الصحيح.</p>";
+            out.innerHTML = "<p style='color:red;'>❌ لم يتم العثور على هذا الرمز.</p>";
             return;
         }
         
-        let h = '<div class="student-name">' + s.n + '</div>';
-        h += '<div class="class-badge">القسم: ' + s.c + '</div>';
+        let h = `<div class="student-name">${s.n}</div>`;
+        h += `<div class="class-badge">القسم: ${s.c}</div>`;
         
-        // وحدة اللغة العربية
-        h += '<h3>📚 وحدة اللغة العربية</h3>';
-        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        const arabicLabels = labels.slice(0, 14);
-        arabicLabels.forEach((l, idx) => {
-            h += `<tr><td>${l}</td><td>${desc[l]}</td><td>${s.g[idx] || 0}</td></tr>`;
-        });
-        h += `<tr class="avg-row"><td colspan="2">معدل مادة اللغة العربية</td><td>${s.a}</td></tr></table>`;
+        // 1. جدول اللغة العربية
+        h += '<h3>📚 مادة اللغة العربية</h3><table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
+        for (let i = 0; i < 14; i++) {
+            h += `<tr><td>${labels[i]}</td><td>${desc[labels[i]]}</td><td>${s.g[i] || 0}</td></tr>`;
+        }
+        h += `<tr class="avg-row"><td colspan="2">المعدل</td><td>${s.a}</td></tr></table>`;
         
-        // وحدة الاجتماعيات
-        const socGrades = [s.g[14]||0, s.g[15]||0, s.g[16]||0];
-        const socAvg = (socGrades.reduce((a,b)=>a+b,0) / 3).toFixed(2);
-        h += '<h3>🌍 وحدة الاجتماعيات</h3>';
-        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        h += `<tr><td>HIST</td><td>${desc.HIST}</td><td>${socGrades[0]}</td></tr>`;
-        h += `<tr><td>GEO</td><td>${desc.GEO}</td><td>${socGrades[1]}</td></tr>`;
-        h += `<tr><td>CIV</td><td>${desc.CIV}</td><td>${socGrades[2]}</td></tr>`;
-        h += `<tr class="avg-row"><td colspan="2">معدل الاجتماعيات</td><td>${socAvg}</td></tr></table>`;
+        // 2. جدول الاجتماعيات
+        const hist = s.g[14] || 0;
+        const geo = s.g[15] || 0;
+        const civ = s.g[16] || 0;
+        const socAvg = ((hist + geo + civ) / 3).toFixed(2);
+        h += '<h3>🌍 مادة الاجتماعيات</h3><table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
+        h += `<tr><td>HIST</td><td>تاريخ</td><td>${hist}</td></tr><tr><td>GEO</td><td>جغرافيا</td><td>${geo}</td></tr><tr><td>CIV</td><td>مدنية</td><td>${civ}</td></tr>`;
+        h += `<tr class="avg-row"><td colspan="2">المعدل</td><td>${socAvg}</td></tr></table>`;
         
-        // وحدة التربية الإسلامية
-        const islamGrade = s.g[17] || 0;
-        h += '<h3>🕌 وحدة التربية الإسلامية</h3>';
-        h += '<table class="result-table"><tr><th>المكون</th><th>الوصف</th><th>النقطة</th></tr>';
-        h += `<tr><td>ISLAM</td><td>${desc.ISLAM}</td><td>${islamGrade}</td></tr>`;
-        h += `<tr class="avg-row"><td colspan="2">معدل التربية الإسلامية</td><td>${islamGrade.toFixed(2)}</td></tr></table>`;
-
-        h += `<div class="info-panel"><strong>💡 ملاحظة توجيهية:</strong><br>`;
-        if (parseFloat(s.a) >= 8) h += 'أداء متميز جداً! استمر في هذا المسار.';
-        else if (parseFloat(s.a) >= 5) h += 'نتيجتك متوسطة ومطمئنة، لكن هناك مجال للتحسن.';
-        else h += 'هذه النتيجة تشير إلى وجود صعوبات. ننصح بالتركيز أكثر على القواعد.';
-        h += '</div>';
+        // 3. التربية الإسلامية
+        const isl = s.g[17] || 0;
+        h += '<h3>🕌 التربية الإسلامية</h3><table class="result-table"><tr><th>المكون</th><th>النقطة</th></tr>';
+        h += `<tr><td>التربية الإسلامية</td><td>${isl}</td></tr></table>`;
 
         out.innerHTML = h;
     }
 
-    function toggleAdmin() {
-        document.getElementById('adminPanel').classList.toggle('hidden');
-    }
+    function toggleAdmin() { document.getElementById('adminPanel').classList.toggle('hidden'); }
 
     async function handleFileUpload(event) {
         const file = event.target.files[0];
-        const status = document.getElementById('updateStatus');
-        if (!file) return;
-
-        status.innerHTML = '⏳ جاري المعالجة...';
-
         const reader = new FileReader();
         reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
-
-                for(let i=1; i<rows.length; i++) {
-                    const r = rows[i];
-                    if(!r[0]) continue;
-                    const mID = String(r[0]).trim().toUpperCase();
-                    const grades = [];
-                    for(let j=3; j<21; j++) grades.push(parseFloat(r[j]) || 0);
-                    
-                    // حساب معدل العربية (أول 14 نقطة)
-                    const arb = grades.slice(0,14);
-                    const avg = (arb.reduce((a,b)=>a+b,0) / 14).toFixed(2);
-                    
-                    DB[mID] = { n: r[1], c: r[2], g: grades, a: avg };
-                }
-
-                localStorage.setItem('students_db', JSON.stringify(DB));
-                status.innerHTML = `<span style="color:green">✅ تم تحديث ${rows.length-1} تلميذ بنجاح!</span>`;
-            } catch(err) {
-                status.innerHTML = '<span style="color:red">❌ خطأ في تنسيق الملف</span>';
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+            
+            for(let i=1; i<json.length; i++){
+                const r = json[i];
+                if(!r[0]) continue;
+                const grades = [];
+                for(let j=3; j<21; j++) grades.push(parseFloat(r[j]) || 0);
+                const avg = (grades.slice(0,14).reduce((a,b)=>a+b,0)/14).toFixed(2);
+                DB[String(r[0]).trim().toUpperCase()] = { n: r[1], c: r[2], g: grades, a: avg };
             }
+            alert('تم التحديث بنجاح! جرب البحث الآن.');
         };
         reader.readAsArrayBuffer(file);
     }
 
     function downloadUpdatedCode() {
-        const dbString = JSON.stringify(DB, null, 4);
-        let html = document.documentElement.outerHTML;
-        // استبدال قاعدة البيانات القديمة بالجديدة في الكود المصدري
-        html = html.replace(/let DB = \{[\s\S]*?\};/, `let DB = ${dbString};`);
-        
-        const blob = new Blob([html], {type: 'text/html'});
+        const scriptContent = `let DB = ${JSON.stringify(DB, null, 4)};`;
+        const currentHtml = document.documentElement.outerHTML.replace(/let DB = \{[\s\S]*?\};/, scriptContent);
+        const blob = new Blob([currentHtml], {type: 'text/html'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'school_results_updated.html';
+        a.download = 'results.html';
         a.click();
     }
-
-    function clearStoredData() {
-        if(confirm('سيتم حذف البيانات من ذاكرة المتصفح فقط؟')) {
-            localStorage.removeItem('students_db');
-            location.reload();
-        }
-    }
-
-    window.onload = loadStoredData;
 </script>
-
 </body>
 </html>
