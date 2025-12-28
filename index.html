@@ -1,194 +1,81 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نتائج مدرسة طه حسين - الأستاذ بلكاني</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        :root{--primary:#2c3e50;--accent:#2980b9;--success:#27ae60;--bg:#f4f7f6}
-        body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);margin:0;padding:15px}
-        .card{background:white;max-width:800px;margin:20px auto;padding:25px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1);text-align:center}
-        .header{border-bottom:3px solid var(--accent);margin-bottom:20px;padding-bottom:10px}
-        input[type="text"],input[type="tel"]{padding:15px;width:80%;border:2px solid #ddd;border-radius:12px;font-size:1.2em;text-align:center;margin-bottom:15px}
-        button{background:var(--accent);color:white;border:none;padding:15px 30px;border-radius:12px;cursor:pointer;font-weight:bold;width:85%;font-size:1.1em;transition:0.3s}
-        button:hover{background:#1f5f8b;transform:translateY(-2px)}
-        .result-table{width:100%;border-collapse:collapse;margin-top:20px}
-        .result-table th,.result-table td{border:1px solid #eee;padding:10px;text-align:center}
-        .result-table th{background:var(--primary);color:white;font-size:0.85em}
-        .student-name{color:#e67e22;font-size:1.6em;font-weight:bold;margin:15px 0}
-        .avg-row{background:#fff3cd;font-weight:bold;font-size:1.2em}
-        .info-panel{background:#e8f4f8;padding:15px;border-radius:10px;margin-top:20px;text-align:right;font-size:0.9em;line-height:1.6}
-        .tips-panel{background:#f0fdf4;border-right:5px solid var(--success);padding:15px;margin-top:15px;text-align:right;line-height:1.8}
-        .footer{margin-top:30px;font-size:0.8em;color:#888;border-top:1px solid #eee;padding-top:15px}
-        .class-badge{display:inline-block;background:#3498db;color:white;padding:5px 12px;border-radius:15px;font-size:0.9em;margin:5px 0}
-        .stage-badge{display:inline-block;background:#9b59b6;color:white;padding:8px 15px;border-radius:20px;font-size:1em;margin:10px 5px;cursor:pointer;transition:0.3s}
-        .stage-badge:hover{transform:scale(1.05);box-shadow:0 4px 8px rgba(0,0,0,0.2)}
-        .stage-badge.active{background:#27ae60}
-        h3{color:var(--primary);margin-top:25px;margin-bottom:10px;border-bottom:2px solid var(--accent);padding-bottom:5px}
-        .admin-panel{margin-top:30px;padding-top:20px;border-top:2px dashed #ccc}
-        .admin-panel.hidden{display:none!important}
-        .admin-panel button{background:#e74c3c;margin-bottom:10px}
-        .download-btn{background:#27ae60!important}
-        .info-box{background:#fff3cd;padding:15px;border-radius:10px;margin-top:15px;text-align:right;font-size:0.85em;line-height:1.6}
-        .admin-trigger{font-size:0.6em;color:#ddd;cursor:pointer;user-select:none}
-        select{padding:10px;border:2px solid #ddd;border-radius:8px;font-size:1em}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نتائج مدرسة طه حسين</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--primary:#2c3e50;--accent:#2980b9;--success:#27ae60;--bg:#f4f7f6}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);margin:0;padding:15px}
+.card{background:white;max-width:800px;margin:20px auto;padding:25px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1);text-align:center}
+.header{border-bottom:3px solid var(--accent);margin-bottom:20px;padding-bottom:10px}
+input[type="text"],input[type="tel"]{padding:15px;width:80%;border:2px solid #ddd;border-radius:12px;font-size:1.2em;text-align:center;margin-bottom:15px}
+button{background:var(--accent);color:white;border:none;padding:15px 30px;border-radius:12px;cursor:pointer;font-weight:bold;width:85%;font-size:1.1em;transition:0.3s}
+button:hover{background:#1f5f8b;transform:translateY(-2px)}
+.result-table{width:100%;border-collapse:collapse;margin-top:20px}
+.result-table th,.result-table td{border:1px solid #eee;padding:10px;text-align:center}
+.result-table th{background:var(--primary);color:white;font-size:0.85em}
+.student-name{color:#e67e22;font-size:1.6em;font-weight:bold;margin:15px 0}
+.avg-row{background:#fff3cd;font-weight:bold;font-size:1.2em}
+.info-panel{background:#e8f4f8;padding:15px;border-radius:10px;margin-top:20px;text-align:right;font-size:0.9em;line-height:1.6}
+.tips-panel{background:#f0fdf4;border-right:5px solid var(--success);padding:15px;margin-top:15px;text-align:right;line-height:1.8}
+.footer{margin-top:30px;font-size:0.8em;color:#888;border-top:1px solid #eee;padding-top:15px}
+.class-badge{display:inline-block;background:#3498db;color:white;padding:5px 12px;border-radius:15px;font-size:0.9em;margin:5px 0}
+.stage-badge{display:inline-block;background:#9b59b6;color:white;padding:8px 15px;border-radius:20px;font-size:1em;margin:10px 5px;cursor:pointer;transition:0.3s}
+.stage-badge:hover{transform:scale(1.05);box-shadow:0 4px 8px rgba(0,0,0,0.2)}
+.stage-badge.active{background:#27ae60}
+h3{color:var(--primary);margin-top:25px;margin-bottom:10px;border-bottom:2px solid var(--accent);padding-bottom:5px}
+.admin-panel{margin-top:30px;padding-top:20px;border-top:2px dashed #ccc}
+.admin-panel.hidden{display:none!important}
+.admin-panel button{background:#e74c3c;margin-bottom:10px}
+.admin-panel button:hover{background:#c0392b}
+.download-btn{background:#27ae60!important}
+.download-btn:hover{background:#229954!important}
+#updateStatus{margin-top:10px;font-size:0.9em;padding:10px;border-radius:8px}
+.info-box{background:#fff3cd;padding:15px;border-radius:10px;margin-top:15px;text-align:right;font-size:0.85em;line-height:1.6}
+.admin-trigger{font-size:0.6em;color:#ddd;cursor:pointer;user-select:none}
+select{padding:10px;border:2px solid #ddd;border-radius:8px;font-size:1em}
+</style>
 </head>
 <body>
-
 <div class="card">
-    <div class="header">
-        <h2>نتائج اللغة العربية - الموسم الدراسي 2025/2026</h2>
-        <p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
-    </div>
-
-    <input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (G...)" onkeypress="if(event.key==='Enter') displayResult()">
-    <button onclick="displayResult()">عرض كشف النقط التفصيلي</button>
-
-    <div id="output" style="margin-top:20px;"></div>
-
-    <div class="admin-panel hidden" id="adminPanel">
-        <h3 style="color:#e74c3c;">⚙️ لوحة التحكم - تحديث النقط</h3>
-        <div style="margin-bottom:20px;padding:15px;background:#e3f2fd;border-radius:10px;text-align:right;">
-            <strong>اختر المرحلة لرفع النقط:</strong><br>
-            <select id="stageSelect" style="width:100%;padding:12px;border-radius:8px;margin-top:10px;font-size:1em;font-weight:bold;">
-                <option value="1">📘 المرحلة الأولى</option>
-                <option value="2">📗 المرحلة الثانية</option>
-            </select>
-        </div>
-        <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none;" onchange="handleFileUpload(event)">
-        <button onclick="document.getElementById('excelFile').click()">📤 رفع ملف Excel لتحديث النقط</button>
-        <button class="download-btn" onclick="downloadUpdatedCode()">💾 تنزيل الكود المحدث (للنشر)</button>
-        <button onclick="location.reload()" style="background:#e67e22!important;margin-top:10px;">🔄 إعادة تحميل الصفحة</button>
-        <div id="updateStatus"></div>
-
-        <div class="info-box">
-            <strong>📋 تنسيق ملف Excel المطلوب:</strong><br>
-            • العمود A: رقم مسار (G...) | العمود B: الاسم | العمود C: القسم<br>
-            • من العمود D إلى U: نقط المواد (18 مادة بالتوالي)<br>
-            <strong>💡 تذكر:</strong> بعد الرفع، اضغط "تنزيل الكود المحدث" لحفظ التغييرات للأبد.
-        </div>
-    </div>
-
-    <div class="footer">
-        هذا النظام مخصص لتلاميذ الأستاذ بلكاني بمدرسة طه حسين<br>
-        الموسم الدراسي 2025/2026<br>
-        <span class="admin-trigger" onclick="toggleAdmin()">v2.0</span>
-    </div>
+<div class="header">
+<h2>نتائج اللغة العربية - الموسم الدراسي 2025/2026</h2>
+<p>مدرسة طه حسين | الأستاذ: عبد اللطيف بلكاني</p>
 </div>
-
+<input type="text" id="massarID" placeholder="أدخل رقم مسار الخاص بك (G...)" onkeypress="if(event.key==='Enter') displayResult()">
+<button onclick="displayResult()">عرض كشف النقط التفصيلي</button>
+<div id="output" style="margin-top:20px;"></div>
+<div class="admin-panel hidden" id="adminPanel">
+<h3 style="color:#e74c3c;">⚙️ لوحة التحكم</h3>
+<div style="margin-bottom:20px;padding:15px;background:#e3f2fd;border-radius:10px;text-align:right;">
+<strong>اختر المرحلة:</strong><br>
+<select id="stageSelect" style="width:100%;padding:12px;border-radius:8px;margin-top:10px;font-size:1em;font-weight:bold;">
+<option value="1">📘 المرحلة الأولى</option>
+<option value="2">📗 المرحلة الثانية</option>
+</select>
+</div>
+<input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none;" onchange="handleFileUpload(event)">
+<button onclick="document.getElementById('excelFile').click()">📤 رفع ملف Excel</button>
+<button class="download-btn" onclick="downloadUpdatedCode()">💾 تنزيل الكود المحدث</button>
+<button onclick="location.reload()" style="background:#e67e22!important;margin-top:10px;">🔄 إعادة تحميل</button>
+<div id="updateStatus"></div>
+<div class="info-box">
+<strong>📋 تنسيق الملف:</strong><br>
+• العمود 1: رقم مسار (G...)<br>• العمود 2: الاسم الكامل<br>• العمود 3: القسم<br>
+• الأعمدة 4-21: النقط (PO2, V1, V2, CO1, CO2, LF2, LC1, LC2, LC3, LC4, PE1, PE2, OL1, OL2, HIST, GEO, CIV, ISLAM)<br>
+• العمود 22 (اختياري): رقم الهاتف<br><br>
+<strong>💡 مهم:</strong> النقط تُحدث مباشرة! اضغط "تنزيل الكود المحدث" للحفظ.
+</div>
+</div>
+<div class="footer">
+هذا النظام مخصص لتلاميذ الأستاذ بلكاني بمدرسة طه حسين<br>
+الموسم الدراسي 2025/2026<br>
+<span class="admin-trigger" onclick="toggleAdmin()">v2.0</span>
+</div>
+</div>
 <script>
-// الإعدادات وقاعدة البيانات
-const labels=["PO2","V1","V2","CO1","CO2","LF2","LC1","LC2","LC3","LC4","PE1","PE2","OL1","OL2","HIST","GEO","CIV","ISLAM"];
-const desc={"PO2":"التواصل الشفهي","V1":"المعجم 1","V2":"المعجم 2","CO1":"فهم المسموع 1","CO2":"فهم المسموع 2","LF2":"طلاقة القراءة","LC1":"فهم المقروء 1","LC2":"فهم المقروء 2","LC3":"فهم المقروء 3","LC4":"فهم المقروء 4","PE1":"الإنتاج الكتابي 1","PE2":"الإنتاج الكتابي 2","OL1":"الظواهر اللغوية 1","OL2":"الظواهر اللغوية 2","HIST":"التاريخ","GEO":"الجغرافية","CIV":"التربية المدنية","ISLAM":"التربية الإسلامية"};
-
-// بيانات أولية (يمكنك مسح البيانات التجريبية بعد أول رفع لملف Excel)
-let DB={"G200064286":{n:"بن المقدم آية",c:"6APG-1",s1:[5,5,10,10,5,6,7,10,10,10,9,7.5,8.25,10,6,8,10,9.5],a1:"8.05",s2:[],a2:"0.00",phone:""}};
-
-let currentStage = 1;
-
-function toggleAdmin() {
-    const pass = prompt("أدخل كلمة مرور المسؤول:");
-    if (pass === "admin123") {
-        document.getElementById('adminPanel').classList.toggle('hidden');
-    } else {
-        alert("كلمة مرور خاطئة");
-    }
-}
-
-function displayResult() {
-    const id = document.getElementById('massarID').value.trim().toUpperCase();
-    const output = document.getElementById('output');
-    
-    if (!DB[id]) {
-        output.innerHTML = "<div style='color:red; padding:20px; font-weight:bold;'>❌ رقم مسار غير مسجل أو خاطئ.</div>";
-        return;
-    }
-
-    const student = DB[id];
-    let html = `
-        <div class="student-name">${student.n}</div>
-        <div class="class-badge">القسم: ${student.c}</div>
-        <div style="margin: 15px 0;">
-            <span class="stage-badge ${currentStage===1?'active':''}" onclick="changeStage(1)">المرحلة 1</span>
-            <span class="stage-badge ${currentStage===2?'active':''}" onclick="changeStage(2)">المرحلة 2</span>
-        </div>
-        <table class="result-table">
-            <tr><th>المادة / المكون</th><th>النقطة / 10</th></tr>`;
-    
-    const scores = currentStage === 1 ? student.s1 : student.s2;
-    const avg = currentStage === 1 ? student.a1 : student.a2;
-
-    if (!scores || scores.length === 0 || (scores.every(s => s === 0) && avg === "0.00")) {
-        html += `<tr><td colspan="2" style="padding:20px;">نقط هذه المرحلة لم تتوفر بعد</td></tr>`;
-    } else {
-        labels.forEach((label, index) => {
-            html += `<tr><td>${desc[label]}</td><td>${scores[index] || 0}</td></tr>`;
-        });
-        html += `<tr class="avg-row"><td>المعدل الدوري</td><td>${avg}</td></tr>`;
-    }
-
-    html += `</table>`;
-    if (avg !== "0.00") {
-        html += `<div class="tips-panel"><strong>💡 ملاحظة:</strong> ${avg >= 5 ? "نتيجة مشرفة، واصل تميزك!" : "يجب العمل أكثر لتحسين مستواك."}</div>`;
-    }
-    
-    output.innerHTML = html;
-}
-
-function changeStage(s) {
-    currentStage = s;
-    displayResult();
-}
-
-function handleFileUpload(e) {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    const stage = document.getElementById('stageSelect').value;
-
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
-
-            json.forEach((row, index) => {
-                if (index === 0 || !row[0]) return;
-                const id = row[0].toString().trim().toUpperCase();
-                const scores = row.slice(3, 21).map(v => parseFloat(v) || 0);
-                const avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2);
-                
-                if (!DB[id]) DB[id] = { n: row[1], c: row[2], s1: [], a1: "0.00", s2: [], a2: "0.00", phone: "" };
-                
-                if (stage === "1") {
-                    DB[id].s1 = scores;
-                    DB[id].a1 = avg;
-                } else {
-                    DB[id].s2 = scores;
-                    DB[id].a2 = avg;
-                }
-            });
-            document.getElementById('updateStatus').innerHTML = "<div style='color:green; margin-top:10px;'>✅ تمت المعالجة بنجاح! اضغط الآن على 'تنزيل الكود المحدث'.</div>";
-        } catch (err) {
-            alert("حدث خطأ أثناء قراءة الملف. تأكد من الصيغة.");
-        }
-    };
-    reader.readAsArrayBuffer(file);
-}
-
-function downloadUpdatedCode() {
-    const currentCode = document.documentElement.outerHTML;
-    const dbString = `let DB=${JSON.stringify(DB)};`;
-    const finalCode = "<!DOCTYPE html>\n" + currentCode.replace(/let DB=\{.*?\};/, dbString);
-    
-    const blob = new Blob([finalCode], {type: 'text/html'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'results_system_2025.html';
-    a.click();
-}
-</script>
-</body>
-</html>
+const L=["PO2","V1","V2","CO1","CO2","LF2","LC1","LC2","LC3","LC4","PE1","PE2","OL1","OL2","HIST","GEO","CIV","ISLAM"];
+const D={"PO2":"التواصل الشفهي","V1":"المعجم 1","V2":"المعجم 2","CO1":"فهم المسموع 1","CO2":"فهم المسموع 2","LF2":"طلاقة القراءة","LC1":"فهم المقروء 1","LC2":"فهم المقروء 2","LC3":"فهم المقروء 3","LC4":"فهم المقروء 4","PE1":"الإنتاج الكتابي 1","PE2":"الإنتاج الكتابي 2","OL1":"الظواهر اللغوية 1","OL2":"الظواهر اللغوية 2","HIST":"التاريخ","GEO":"الجغرافية","CIV":"التربية المدنية","ISLAM":"التربية الإسلامية"};
+let DB={"G176042802":{n:"نعناع خديجة",c:"6APG-1",s1:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],a1:"0.00",s2:[],a2:"0.00",p:""},"G183107408":{n:"الدرقاوي عز العرب",c:"6APG-1",s1:[2,0,0,0,2,4,2.5,6,0,0,4.5,1,3,0.25,0,2,2,7.5],a1:"1.80",s2:[],a2:"0.00",p:""},"G185079604":{n:"بوحفرة ادم",c:"6APG-1",s1:[2,2.5,7.5,0,4,4,1.5,3,6,4,3.5,3,1,0,0,2.5,6,3],a1:"3.00",s2:[],a2:"0.00",p:""},"G186074182":{n:"ضياف خديجة",c:"6APG-1",s1:[6,5,7.5,2,0,5,5.5,7,8,0,5.5,0,5.75,0,4,4,6.5,3],a1:"4.09",s2:[],a2:"0.00",p:""},"G189076256":{n:"بنخيران حسام",c:"6APG-1",s1:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],a1:"0.00",s2:[],a2:"0.00",p:""},"G189134944":{n:"الشباكي المهدي",c:"6APG-1",s1:[4,5,2.5,7,0,9,7,0,6,0,8,6,0,0,6.5,7.5,4,9],a1:"3.89",s2:[],a2:"0.00",p:""},"G191079732":{n:"فتيحي يحيى",c:"6APG-1",s1:[2,2.5,7.5,1,0,3,7,0,2,4,5.5,5,3.25,2,3,5.5,5.5,6.5],a1:"3.20",s2:[],a2:"0.00",p:""},"G193074786":{n:"لبيض محمد",c:"6APG-1",s1:[2,5,5,2,1,4,5.5,0,2,4,7.5,4,0.25,0,2.5,2.5,6.5,3],a1:"3.02",s2:[],a2:"0.00",p:""},"G194020655":{n:"مطار آية",c:"6APG-1",s1:[3,2.5,7.5,8,2,7,3,4,2,0,7,5,0.5,0,9,10,10,8],a1:"3.68",s2:[],a2:"0.00",p:""},"G197097558":{n:"بنعبو ريان",c:"6APG-1",s1:[2,7.5,7.5,0,0,3,4,7,8,0,0,0,0,0,4.5,6,2,2],a1:"2.79",s2:[],a2:"0.00",p:""},"G200042049":{n:"خرباق مروة",c:"6APG-1",s1:[3,5,10,8,0,7,2.5,3,10,4,8,6.5,5,0,5.5,4,6.5,2],a1:"5.14",s2:[],a2:"0.00",p:""},"G200046452":{n:"زهران مليكة",c:"6APG-1",s1:[6,5,10,8,4,5,5.5,10,10,10,7.5,6,5.75,2,6,7.5,6.5,8],a1:"6.77",s2:[],a2:"0.00",p:""},"G200064286":{n:"بن المقدم آية",c:"6APG-1",s1:[5,5,10,10,5,6,7,10,10,10,9,7.5,8.25,10,6,8,10,9.5],a1:"8.05",s2:[],a2:"0.00",p:""},"G201073556":{n:"الساعدي محمد",c:"6APG-1",s1:[3,0,7.5,4,0,5,2.5,0,4,4,7,5,3,0,6,6.5,3,6],a1:"3.21",s2:[],a2:"0.00",p:""},"G202028855":{n:"حيمصي الياس",c:"6APG-1",s1:[4,7.5,7.5,8,0,9,7,0,0,10,8,7,0,0,9,8,9.5,8.5],a1:"4.86",s2:[],a2:"0.00",p:""},"G202028856":{n:"الدليلي هاجر",c:"6APG-1",s1:[5,7.5,10,9,8,9,8.5,10,10,4,8,7.5,5,4,8,9,8,9.5],a1:"7.54",s2:[],a2:"0.00",p:""},"G202028865":{n:"فتوحي حمزة",c:"6APG-1",s1:[2,7.5,7.5,10,7,9,4,7,6,4,6.5,6,0,0,5,7,6.5,8],a1:"5.46",s2:[],a2:"0.00",p:""},"G202028870":{n:"القدوري مريم",c:"6APG-1",s1:[7,5,10,9,8,10,10,10,10,4,9,7,7,6,10,10,10,9.5],a1:"8.00",s2:[],a2:"0.00",p:""},"G202028871":{n:"القدوري آسية",c:"6APG-1",s1:[6,10,10,10,5,8,5.5,7,10,4,8,9,6.5,2,10,10,10,10],a1:"7.21",s2:[],a2:"0.00",p:""},"G202028873":{n:"رزوك جنات",c:"6APG-1",s1:[6,10,10,8.5,5,8,10,10,10,4,5,2,7.5,4,5,5,8,4.5],a1:"7.14",s2:[],a2:"0.00",p:""},"G202028875":{n:"حازم محمد امين",c:"6APG-1",s1:[6,7.5,10,8,10,10,10,7,10,4,9,9,5.25,10,9,9.5,7.5,10],a1:"8.27",s2:[],a2:"0.00",p:""},"G202028877":{n:"حجاج عبد الله",c:"6APG-1",s1:[6,5,2.5,10,0,5,2.5,7,4,4,8.5,4,1.5,2,5,5.5,7,4],a1:"4.43",s2:[],a2:"0.00",p:""},"G202028878":{n:"ضياف رانيا",c:"6APG-1",s1:[6,10,10,10,9,10,2.5,10,10,4,9,9.5,7.5,6,9,9,8.5,9.5],a1:"8.11",s2:[],a2:"0.00",p:""},"G203028890":{n:"عنبري جنات",c:"6APG-1",s1:[4,2.5,7.5,3,6,3,5.5,0,10,4,6,5.5,1,0,5,8,6.5,3],a1:"4.14",s2:[],a2:"0.00",p:""},"G203028894":{n:"الحرفاوي زينب",c:"6APG-1",s1:[5,2.5,5,8,7,8,5.5,7,10,4,8,7,4,2,7,9,8.5,8.5],a1:"5.93",s2:[],a2:"0.00",p:""},"G203028897":{n:"الجبلي محمد",c:"6APG-1",s1:[4,2.5,7.5,10,8,6,8.5,7,10,10,6,6,1.5,2,8,8.5,6,5],a1:"6.36",s2:[],a2:"0.00",p:""},"G204042031":{n:"فرينة انوار",c:"6APG-1",s1:[6,10,10,10,9,10,10,10,10,4,10,7.5,8.25,4,8,9,7.5,10],a1:"8.48",s2:[],a2:"0.00",p:""},"G204084290":{n:"امناوي صفاء",c:"6APG-1",s1:[6,5,7.5,10,6,8,4.5,4.5,10,10,9,7.5,8.75,10,8,8,10,9.5],a1:"7.62",s2:[],a2:"0.00",p:""},"G205068483":{n:"الواحدي محمد أمين",c:"6APG-1",s1:[3,7.5,10,5,1,10,4,7,8,10,7,5,7.5,6,3.5,7,2.5,7],a1:"6.50",s2:[],a2:"0.00",p:""},"G209006104":{n:"عفيف اشراق",c:"6APG-1",s1:[5,5,7.5,8,4,4,5.5,7,8,4,9,6.5,4,0,8,7,8,7.5],a1:"5.54",s2:[],a2:"0.00",p:""},"G209031884":{n:"جلال ريان",c:"6APG-1",s1:[2,7.5,10,3,3,4,7,10,6,4,6.5,3,0.5,0,6,9.5,7,5.5],a1:"4.75",s2:[],a2:"0.00",p:""},"G209042045":{n:"المجذوبي الياس",c:"6APG-1",s1:[2,7.5,10,2,2,4,10,3,10,4,6,4,0,0,4,5,6.5,4.5],a1:"4.61",s2:[],a2:"0.00",p:""},"G209054745":{n:"نوار ملاك",c:"6APG-1",s1:[8,5,10,6,4.5,6,10,10,10,4,8.5,6,6.25,2,5,6,8,6.5],a1:"6.88",s2:[],a2:"0.00",p:""},"R198042190":{n:"العيني أنس",c:"6APG-1",s1:[2,5,7.5,6,1,5,5.5,7,8,4,6,4.5,2,4,5.5,6,8,6.5],a1:"4.82",s2:[],a2:"0.00",p:""},"F193220916":{n:"نعيم لقمان",c:"6APG-1",s1:[7,5,5,8,2,8,5.5,7,6,4,7,5,4.75,2,4.5,6,8,7],a1:"5.45",s2:[],a2:"0.00",p:""},"G162048433":{n:"لمخوض أمين",c:"6APG-2",s1:[3,2.5,5,2,0,3,2.5,3,6,0,4,1.5,0,0,7.5,6,3,1],a1:"2.32",s2:[],a2:"0.00",p:""},"G171092093":{n:"مدزيري محمد",c:"6APG-2",s1:[2,7.5,7.5,3,2,3,2.5,0,10,4,5.5,5,4,0,8,8.5,4,4],a1:"4.00",s2:[],a2:"0.00",p:""},"G183050458":{n:"الزاهري احمد",c:"6APG-2",s1:[3,5,10,4,0,3,4,3,8,4,4,3,1,4,5,4,5,2],a1:"4.00",s2:[],a2:"0.00",p:""},"G186094973":{n:"القصيبي محمد امين",c:"6APG-2",s1:[3,2.5,10,4,1,5,2.5,3,10,4,6,4,4.5,0,6,5.5,7,4],a1:"4.25",s2:[],a2:"0.00",p:""},"G188061295":{n:"الحسوني يونس",c:"6APG-2",s1:[2,7.5,5,6,4,4,4,4,8,10,8.5,5.5,5.25,2,9,10,7.5,4],a1:"5.41",s2:[],a2:"0.00",p:""},"G191068973":{n:"البوعناني ايمن",c:"6APG-2",s1:[5,5,7.5,5,0,4,10,7,8,10,7,4,1,6,7,9,7,4],a1:"5.68",s2:[],a2:"0.00",p:""},"G191123629":{n:"بلفحيلية رضى",c:"6APG-2",s1:[2,0,2.5,2,0,5,2.5,7,4,4,0,5,3.75,0,2,4,8,6],a1:"2.70",s2:[],a2:"0.00",p:""},"G192020609":{n:"شاقو سلمى",c:"6APG-2",s1:[3,2.5,2.5,6,8,4,2.5,7,8,4,4,5,8,0,5,3.5,6,0],a1:"4.61",s2:[],a2:"0.00",p:""},"G192086633":{n:"المساوي مريم",c:"6APG-2",s1:[6,2.5,7.5,5,8,4,7,10,10,4,9.5,7,7,8,6,7.5,7,4],a1:"6.82",s2:[],a2:"0.00",p:""},"G193020606":{n:"الناجي سعد",c:"6APG-2",s1:[4,10,10,8,5,5,7,3,8,4,6,6,4.5,0,9,10,9.5,9],a1:"5.75",s2:[],a2:"0.00",p:""},"G193112777":{n:"الفائق مراد",c:"6APG-2",s1:[7,2.5,0,4,2,4,7,7,6,4,5,5,0,3.25,4,8,7,3],a1:"4.05",s2:[],a2:"0.00",p:""},"G199020638":{n:"الجاوي فهد",c:"6APG-2",s1:[4,5,5,4,3,3,5.5,7,8,4,2,3,0.25,0,5,6,3,2],a1:"3.84",s2:[],a2:"0.00",p:""},"G201042028":{n:"القباي نسرين",c:"6APG-2",s1:[5,2.5,10,6,4,8,7,3,4,10,8.5,4.5,5.5,0,2,7,6,4],a1:"5.57",s2:[],a2:"0.00",p:""},"G201087057":{n:"الفائق صفاء",c:"6APG-2",s1:[5,5,10,7,6,5,10,7,6,10,5.5,6,2,2,10,10,10,9],a1:"6.18",s2:[],a2:"0.00",p:""},"G201150645":{n:"الإدريسي عماد",c:"6APG-2",s1:[5,10,7.5,8,3,9,5.5,10,10,4,8.5,7,6,5,8,4,8,5],a1:"7.04",s2:[],a2:"0.00",p:""},"G202006106":{n:"المركة ريان",c:"6APG-2",s1:[2,7.5,5,5,0,4,3,7,8,10,9.5,6,4.25,0,5,3.5,9,4],a1:"5.09",s2:[],a2:"0.00",p:""},"G202006858":{n:"الناصح حمزة",c:"6APG-2",s1:[2,5,5,5,1,5,5.5,7,6,4,4,4,1.75,0,2,7,6,0],a1:"3.95",s2:[],a2:"0.00",p:""},"G202028861":{n:"محراش صهيب",c:"6APG-2",s1:[7,7.5,5,10,10,10,7,7,10,10,9,10,8.25,8,10,10,10,6.5],a1:"8.48",s2:[],a2:"0.00",p:""},"G202028868":{n:"الصبح فاطمة الزهراء",c:"6APG-2",s1:[3,2.5,10,2,1,7,5.5,0,2,0,7,6.5,1.5,0,7,7,9.5,9],a1:"3.43",s2:[],a2:"0.00",p:""},"G202028869":{n:"بوشان نور الهدى",c:"6APG-2",s1:[7,5,10,10,5,9,2.5,7,8,4,7,7.5,8,5,10,9,9.5,8],a1:"6.79",s2:[],a2:"0.00",p:""},"G202028872":{n:"القرقوري زياد",c:"6APG-2",s1:[4,2.5,7.5,5,5,4,10,10,10,0,6,5,5,5,8,10,7,7],a1:"5.64",s2:[],a2:"0.00",p:""},"G202028880":{n:"العكاري رحاب",c:"6APG-2",s1:[5,7.5,10,9,4,6,7,7,8,4,7,7.5,8,7,9,9,10,8],a1:"6.93",s2:[],a2:"0.00",p:""},"G202045529":{n:"الناصري معاد",c:"6APG-2",s1:[4,2.5,7.5,3,0,4,2.5,4,6,0,4.5,4,2.5,0,5,6,6,1],a1:"3.18",s2:[],a2:"0.00",p:""},"G202064340":{n:"الفخري خديجة",c:"6APG-2",s1:[9,2.5,5,4,6,6,2.5,7,8,4,5.5,5,6.5,0,8,9,9,8],a1:"5.07",s2:[],a2:"0.00",p:""},"G203028886":{n:"الفطواكي ريحانة",c:"6APG-2",s1:[9,7.5,10,7,8,7,8.5,7,10,4,8,9,9.75,8,8,9.5,7,7],a1:"8.05",s2:[],a2:"0.00",p:""},"G203028888":{n:"عفوالله ام
