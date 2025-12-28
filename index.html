@@ -172,11 +172,13 @@ DB[massarID]={n:name,c:classRoom,s1:stage==='1'?grades:[],a1:stage==='1'?average
 }
 }
 status.style.background='#e8f5e9';
-status.innerHTML='<span style="color:green;"><strong>✅ تم التحديث بنجاح!</strong><br>📝 تم تحديث '+updatedCount+' تلميذ(ة)<br>➕ تمت إضافة '+newCount+' تلميذ(ة) جديد(ة)<br>📊 إجمالي التلاميذ: '+Object.keys(DB).length+'<br>📗 تم تحديث المرحلة '+stage+'<br><br><strong>⚠️ مهم:</strong> اضغط على "تنزيل الكود المحدث" ثم ارفعه على GitHub!</span>';
+status.innerHTML='<span style="color:green;"><strong>✅ تم التحديث بنجاح!</strong><br>📝 تم تحديث '+updatedCount+' تلميذ(ة)<br>➕ تمت إضافة '+newCount+' تلميذ(ة) جديد(ة)<br>📊 إجمالي التلاميذ: '+Object.keys(DB).length+'<br>📗 تم تحديث المرحلة '+stage+'<br><br><strong>⚠️ مهم:</strong> اضغط على "تنزيل الكود المحدث" ثم ارفعه على GitHub!<br><br><button onclick="displayResult()" style="margin-top:10px;width:auto;padding:10px 20px;">🔄 اختبر التحديث الآن</button></span>';
 event.target.value='';
-}catch(error){
-status.style.background='#ffebee';
-status.innerHTML='<span style="color:red;">❌ حدث خطأ في معالجة الملف. تأكد من أن الملف بصيغة Excel صحيحة.</span>';
+
+// تحديث تلقائي للعرض إذا كان هناك تلميذ معروض
+const currentMassar = document.getElementById('massarID').value.trim().toUpperCase();
+if(currentMassar && DB[currentMassar]){
+    displayResult();
 }
 }
 
